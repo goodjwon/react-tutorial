@@ -1,27 +1,21 @@
-import {useState, useRef} from 'react'
+import {useState, useRef, useEffect} from 'react'
 
 function App() {
+  const [count, setCount] = useState(1);  
+  const renderCount = useRef(1)
+  // 무한 loop error count statue update -> userEffect update -> userEffect update -> ...
+  // const [renderCountError, setRenderCountError] = useState(1)
 
-  const [count, setCount] = useState(0);
-  const countRef = useRef(0)
-
-  console.log('랜더링 됩니까?');
-  
-  const increaseCountState = () => {
-    setCount(count+1);
-  };
-
-  const increaseCountRef = () => {
-    countRef.current = countRef.current + 1;
-    console.log(countRef.current)
-  }
+  useEffect(()=>{
+    renderCount.current = renderCount.current + 1;
+    //  setRenderCountError(renderCountError + 1);
+    console.log('renderCount Number: ' + renderCount.current)
+  });
 
   return (
     <div>
-      <p>State: {count}</p>
-      <p>Ref: {countRef.current}</p>
-      <button onClick={increaseCountState}>State 올리기</button>
-      <button onClick={increaseCountRef}> Ref 올리기</button>
+      <p>Count: {count}</p>
+      <button onClick={()=>setCount(count+1)}>올려</button>
     </div>
   );
 }
