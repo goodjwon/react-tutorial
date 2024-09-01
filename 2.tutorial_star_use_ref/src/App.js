@@ -1,22 +1,28 @@
-import {useState, useRef, useEffect} from 'react'
+import {BrowserRouter as Router, Route, Link, Routes} from 'react-router-dom';
+import UseRef1 from './UseRef_1';
+import UseRef2 from './UseRef_2';
 
 function App() {
-  const [count, setCount] = useState(1);  
-  const renderCount = useRef(1)
-  // 무한 loop error count statue update -> userEffect update -> userEffect update -> ...
-  // const [renderCountError, setRenderCountError] = useState(1)
-
-  useEffect(()=>{
-    renderCount.current = renderCount.current + 1;
-    //  setRenderCountError(renderCountError + 1);
-    console.log('renderCount Number: ' + renderCount.current)
-  });
-
   return (
-    <div>
-      <p>Count: {count}</p>
-      <button onClick={()=>setCount(count+1)}>올려</button>
-    </div>
+    <Router>
+      <div>
+        <nav>
+          <ul>
+            <li>
+              <Link to="/ref1">UseRef1</Link>
+            </li>
+            <li>
+              <Link to="/ref2">UseRef2</Link>
+            </li>
+          </ul>
+        </nav>
+
+        <Routes>
+          <Route path="/ref1" element={<UseRef1 />} />
+          <Route path="/ref2" element={<UseRef2 />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
