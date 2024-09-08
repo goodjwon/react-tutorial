@@ -1,0 +1,157 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>React Examples</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        section {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+        }
+        .container {
+            width: 300px;
+            margin: auto;
+        }
+        button {
+            margin: 2px;
+            width: 40px;
+            height: 40px;
+        }
+        #calculatorDisplay, #weatherInfo, #errorMessage, #quizResult {
+            margin-top: 5px;
+            padding: 5px;
+            border: 1px solid #ccc;
+            min-height: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>React Examples</h1>
+
+    <section>
+        <h2>1. 카운터 애플리케이션</h2>
+        <button>+</button>
+        <span id="counter">0</span>
+        <button>-</button>
+    </section>
+
+    <section>
+        <h2>2. 할 일 목록</h2>
+        <input type="text" placeholder="New task">
+        <button>Add</button>
+        <ul>
+            <li>Task 1</li>
+            <li>Task 2</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>3. 유효성 검사 폼</h2>
+        <input type="text" placeholder="Name">
+        <input type="email" placeholder="Email">
+        <button>Submit</button>
+        <div id="errorMessage">Errors will show here</div>
+    </section>
+
+    <section>
+        <h2>4. 날씨 앱</h2>
+        <input type="text" placeholder="Enter location">
+        <button>Get Weather</button>
+        <div id="weatherInfo">Weather info will show here</div>
+    </section>
+
+    <section>
+        <h2>5. 계산기</h2>
+        <div id="calculatorDisplay">0</div>
+        <div class="container">
+            <button>1</button><button>2</button><button>3</button><button>+</button><br>
+            <button>4</button><button>5</button><button>6</button><button>-</button><br>
+            <button>7</button><button>8</button><button>9</button><button>*</button><br>
+            <button>0</button><button>.</button><button>=</button><button>/</button>
+        </div>
+    </section>
+
+    <section>
+        <h2>6. 퀴즈 앱</h2>
+        <div>What is 2 + 2?</div>
+        <input type="radio" name="answer" value="3"> 3
+        <input type="radio" name="answer" value="4"> 4
+        <input type="radio" name="answer" value="5"> 5
+        <button>Submit</button>
+        <div id="quizResult">Result will show here</div>
+    </section>
+
+    <section>
+        <h2>7. 라이트/다크 모드 토글</h2>
+        <button>Toggle Mode</button>
+    </section>
+
+    <section>
+        <h2>8. 이미지 캐러셀</h2>
+        <button>Prev</button>
+        <img src="https://via.placeholder.com/150" alt="Placeholder Image">
+        <button>Next</button>
+    </section>
+
+    <section>
+        <h2>9. 지출 추적기</h2>
+        <input type="text" placeholder="Description">
+        <input type="number" placeholder="Amount">
+        <button>Add Expense</button>
+        <div>Total: $0.00</div>
+    </section>
+
+    <section>
+        <h2>10. 스톱워치</h2>
+        <div>00:00:00</div>
+        <button>Start</button>
+        <button>Stop</button>
+        <button>Reset</button>
+    </section>
+
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+</body>
+</html>
