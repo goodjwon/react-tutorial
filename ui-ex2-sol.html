@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Student Projects</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css">
+    <style>
+        .calculator {
+            max-width: 250px;
+            margin: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .calculator .display {
+            height: 60px;
+            font-size: 2em;
+            text-align: right;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .calculator button {
+            height: 60px;
+            font-size: 1.5em;
+            margin: 2px;
+        }
+        .btn-operator {
+            background-color: #f0ad4e;
+            color: white;
+        }
+        .btn-equal {
+            background-color: #5cb85c;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-5">
+    <h1 class="text-center">Student Projects</h1>
+
+    <!-- 1. Counter Application -->
+	<section class="mb-5">
+		<h3>1. Counter Application</h3>
+		<h4>Counter: <span id="counter">0</span></h4>
+		<div class="btn-group">
+			<button class="btn btn-primary" onclick="incrementCounter()">Increment</button>
+			<button class="btn btn-danger" onclick="decrementCounter()">Decrement</button>
+		</div>
+	</section>
+
+    <!-- 2. Todo List -->
+    <section class="mb-5">
+        <h3>2. Todo List</h3>
+        <ul class="list-group" id="todo-list">
+            <li class="list-group-item"><input type="checkbox"> Task 1</li>
+            <li class="list-group-item"><input type="checkbox"> Task 2</li>
+            <li class="list-group-item"><input type="checkbox"> Task 3</li>
+        </ul>
+        <div class="input-group mt-3">
+            <input type="text" class="form-control" id="new-task" placeholder="Add new task">
+            <div class="input-group-append">
+                <button class="btn btn-success" id="add-task-btn">Add Task</button>
+                <button class="btn btn-danger" id="delete-task-btn">Delete</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. Simple Form with Validation -->
+    <section class="mb-5">
+        <h3>3. Simple Form with Validation</h3>
+        <form id="validation-form">
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" class="form-control" id="name">
+            </div>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" class="form-control" id="email">
+            </div>
+            <button type="submit" class="btn btn-primary" id="submit-btn">Submit</button>
+        </form>
+    </section>
+
+<!-- 4. Weather App -->
+<section class="mb-5">
+    <h3>4. Weather App</h3>
+    <div class="form-inline">
+        <label for="location" class="mr-2">Location:</label>
+        <input type="text" class="form-control mr-2" id="location" placeholder="Enter location">
+        <button class="btn btn-primary" id="get-weather-btn">Get Weather</button>
+    </div>
+    <div id="weather-info" class="mt-3">
+        <p>Temperature: <span id="temperature">--°C</span></p>
+        <p>Condition: <span id="condition">--</span></p>
+    </div>
+</section>
+
+<!-- 6. Quiz App -->
+<!-- 6. Quiz App -->
+<section class="mb-5">
+    <h3>6. Quiz App</h3>
+    <p id="quiz-question">Question will appear here</p>
+    <div id="options-container">
+        <!-- 선택지가 동적으로 생성됩니다 -->
+    </div>
+    <button class="btn btn-primary mt-3" onclick="nextQuestion()">Next</button>
+</section>
+
+<!-- JavaScript 파일 포함 -->
+<script src="quiz.js"></script>
+
+
+
+
+    
+<script>
+    // Counter Application
+    let counterValue = 0;
+
+    function incrementCounter() {
+        counterValue++;
+        document.getElementById('counter').textContent = counterValue;
+    }
+
+    function decrementCounter() {
+        if (counterValue > 0) {
+            counterValue--;
+            document.getElementById('counter').textContent = counterValue;
+        }
+    }
+
+    // 체크박스 상태 변경 시 취소선 적용
+    document.getElementById('todo-list').addEventListener('change', function(e) {
+        if (e.target && e.target.type === 'checkbox') {
+            let listItem = e.target.parentElement;
+            if (e.target.checked) {
+                listItem.style.textDecoration = 'line-through';
+            } else {
+                listItem.style.textDecoration = 'none';
+            }
+        }
+    });
+
+    // 새로운 할 일 추가
+    document.getElementById('add-task-btn').addEventListener('click', function() {
+        let taskText = document.getElementById('new-task').value.trim();
+        if (taskText !== '') {
+            let li = document.createElement('li');
+            li.className = 'list-group-item';
+            li.innerHTML = '<input type="checkbox"> ' + taskText;
+            document.getElementById('todo-list').appendChild(li);
+            document.getElementById('new-task').value = '';
+        }
+    });
+
+    // 선택된 할 일 삭제
+    document.getElementById('delete-task-btn').addEventListener('click', function() {
+        let list = document.getElementById('todo-list');
+        let items = list.getElementsByTagName('li');
+        // HTMLCollection은 실시간으로 업데이트되므로 역순으로 반복
+        for (let i = items.length - 1; i >= 0; i--) {
+            let checkbox = items[i].getElementsByTagName('input')[0];
+            if (checkbox && checkbox.checked) {
+                list.removeChild(items[i]);
+            }
+        }
+    });
+
+    // Form Validation
+    document.getElementById('submit-btn').addEventListener('click', function(event) {
+        event.preventDefault(); // 폼의 기본 제출 동작을 막음
+        const name = document.getElementById('name').value.trim();
+        const email = document.getElementById('email').value.trim();
+
+        // 정규식을 사용한 검증 로직
+        const namePattern = /^[가-힣a-zA-Z\s]+$/; // 한글, 영문, 공백만 허용
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // 간단한 이메일 형식 검증
+
+        if (name === '' || email === '') {
+            alert('모든 필드를 입력해주세요.');
+        } else if (!namePattern.test(name)) {
+            alert('이름은 한글과 영문만 입력할 수 있습니다.');
+        } else if (!emailPattern.test(email)) {
+            alert('유효한 이메일 주소를 입력해주세요.');
+        } else {
+            alert('폼이 성공적으로 제출되었습니다.');
+            // 여기에서 폼 데이터를 처리하는 코드를 추가할 수 있습니다.
+        }
+    });
+
+
+    // Weather App
+    document.getElementById('get-weather-btn').addEventListener('click', function() {
+        const location = document.getElementById('location').value.trim();
+        if (location === '') {
+            alert('Please enter a location');
+            return;
+        }
+
+        // 모의 데이터 생성
+        let mockData;
+        if (location.toLowerCase() === 'seoul') {
+            mockData = {
+                main: { temp: 18 },
+                weather: [{ description: '맑음' }]
+            };
+        } else if (location.toLowerCase() === 'new york') {
+            mockData = {
+                main: { temp: 22 },
+                weather: [{ description: '구름 많음' }]
+            };
+        } else {
+            mockData = {
+                main: { temp: 20 },
+                weather: [{ description: '날씨 정보를 찾을 수 없습니다' }]
+            };
+        }
+
+        // 네트워크 지연 시간 시뮬레이션
+        setTimeout(() => {
+            const temp = mockData.main.temp;
+            const condition = mockData.weather[0].description;
+
+            document.getElementById('temperature').textContent = `${temp}°C`;
+            document.getElementById('condition').textContent = condition;
+        }, 500); // 500ms 지연
+    });
+
+	// 6.JavaScript code for the Quiz App
+	const quizData = [
+		{
+			question: "What is 2 + 2?",
+			options: ["3", "4"],
+			correct: "4"
+		},
+		{
+			question: "What is the capital of France?",
+			options: ["London", "Paris"],
+			correct: "Paris"
+		},
+		// Add more questions as needed
+	];
+
+	let currentQuestion = 0;
+	let score = 0;
+
+	function loadQuestion() {
+		// Get the current question data
+		const currentQuiz = quizData[currentQuestion];
+
+		// Update the question text
+		document.getElementById("quiz-question").innerText = currentQuiz.question;
+
+		// Get all option inputs and labels
+		const options = document.getElementsByName("answer");
+		const labels = document.querySelectorAll(".form-check-label");
+
+		// Update options text and values
+		options.forEach((option, index) => {
+			option.value = currentQuiz.options[index];
+			option.checked = false; // Reset the selection
+		});
+
+		labels.forEach((label, index) => {
+			label.innerText = currentQuiz.options[index];
+		});
+	}
+
+	function nextQuestion() {
+		// Get the selected answer
+		const options = document.getElementsByName("answer");
+		let selectedAnswer;
+		options.forEach((option) => {
+			if (option.checked) {
+				selectedAnswer = option.value;
+			}
+		});
+
+		if (!selectedAnswer) {
+			alert("Please select an answer!");
+			return;
+		}
+
+		// Check if the answer is correct
+		if (selectedAnswer === quizData[currentQuestion].correct) {
+			score++;
+		}
+
+		currentQuestion++;
+
+		if (currentQuestion < quizData.length) {
+			loadQuestion();
+		} else {
+			// Display the final score
+			document.querySelector("section").innerHTML = `
+				<h3>Your Score: ${score} / ${quizData.length}</h3>
+				<button class="btn btn-primary mt-3" onclick="location.reload()">Restart Quiz</button>
+			`;
+		}
+	}
+
+	// Load the first question when the page loads
+	window.onload = function() {
+		loadQuestion();
+	};
+
+</script>
+
+    
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
