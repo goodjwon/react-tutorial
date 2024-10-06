@@ -1,0 +1,30 @@
+/* src/Counter.css */
+.counter-section {
+	text-align: center;
+	margin: 20px;
+  }
+  
+  .btn-group {
+	display: flex;
+	justify-content: center;
+	gap: 10px;
+	margin-top: 10px;
+  }
+  
+  .btn {
+	padding: 10px 20px;
+	font-size: 16px;
+	cursor: pointer;
+	border: none;
+	border-radius: 5px;
+  }
+  
+  .increment {
+	background-color: #007bff;
+	color: white;
+  }
+  
+  .decrement {
+	background-color: #dc3545;
+	color: white;
+  }
