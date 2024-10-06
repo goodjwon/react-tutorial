@@ -62,11 +62,7 @@ npx create-react-app [프로젝트명] --template file:./react-default-template
    ```bash
    npm start
    ```
-
-### 퀴즈
-
-각 주요 섹션이 끝난 후, **quiz.js** 파일을 이용하여 배운 내용을 퀴즈로 확인할 수 있습니다. 이를 통해 학습 내용을 더욱 공고히 할 수 있습니다.
-
+   
 ### 파일 정리 스크립트
 
 새로운 리액트 프로젝트를 생성한 후 불필요한 파일들을 정리하려면, **cleanup.js** 스크립트를 사용하세요:
