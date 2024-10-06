@@ -16,7 +16,7 @@ REACT-TUTORIAL/					 # 리액트 튜토리얼 루트 폴더
 │   └── package.json             # 리액트 템플릿의 기본 package.json 파일
 │
 ├── cleanup.js                   # 프로젝트 생성 후 불필요한 파일을 삭제하는 스크립트
-├── quiz.js                      # 리액트 관련 퀴즈 파일
+├── quiz.js                      # 퀴즈 연습문제.
 ├── .gitignore                   # Git에 포함하지 않을 파일들을 정의한 gitignore 파일
 └── HTML 파일들                   # 실습 및 UI 예제들
 ```
@@ -62,7 +62,7 @@ npx create-react-app [프로젝트명] --template file:./react-default-template
    ```bash
    npm start
    ```
-   
+
 ### 파일 정리 스크립트
 
 새로운 리액트 프로젝트를 생성한 후 불필요한 파일들을 정리하려면, **cleanup.js** 스크립트를 사용하세요:
