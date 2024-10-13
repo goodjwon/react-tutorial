@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1, shrink-to-fit=no"
+        />
+        <title>Student Projects</title>
+        <link
+            rel="stylesheet"
+            href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+        />
+        <style>
+            .calculator {
+                max-width: 250px; /* 계산기 너비 */
+                margin: auto;
+                border: 1px solid #ccc;
+                padding: 10px;
+                border-radius: 10px;
+            }
+            .calculator .display {
+                height: 60px; /* 디스플레이 높이 */
+                font-size: 2em;
+                text-align: right;
+                padding: 10px;
+                margin-bottom: 10px;
+                border-radius: 5px;
+            }
+            .calculator button {
+                height: 60px; /* 버튼 높이 */
+                font-size: 1.5em; /* 글씨 크기 */
+                margin: 2px; /* 버튼 사이 여백 */
+            }
+            .btn-operator {
+                background-color: #f0ad4e;
+                color: white;
+            }
+            .btn-equal {
+                background-color: #5cb85c;
+                color: white;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container mt-5">
+            <!-- 2. Todo List -->
+            <section class="mb-5">
+                <h3>2. Todo List</h3>
+                <ul class="list-group" id="todo-list">
+                    <li class="list-group-item">
+                        <input type="checkbox" /> Task 1
+                    </li>
+                    <li class="list-group-item">
+                        <input type="checkbox" /> Task 2
+                    </li>
+                    <li class="list-group-item">
+                        <input type="checkbox" /> Task 3
+                    </li>
+                </ul>
+                <div class="input-group mt-3">
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="new-task"
+                        placeholder="Add new task"
+                    />
+                    <div class="input-group-append">
+                        <button class="btn btn-success" onclick="addTask()">
+                            Add Task
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteTask()">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+        <script>
+            // Todo List
+            function addTask() {
+                console.log("Add task button clicked");
+            }
+
+            function deleteTask() {
+                console.log("Delete task button clicked");
+            }
+
+            // Form Validation
+            function validateForm(event) {
+                event.preventDefault();
+                console.log("Form validation triggered");
+            }
+        </script>
+    </body>
+</html>
