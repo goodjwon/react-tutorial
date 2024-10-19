@@ -101,14 +101,57 @@
 
         function calculate() {
             const display = document.getElementById('display');
-            try {
-                // Prevents eval injection by allowing only safe math expressions
-                const result = new Function("return " + display.value.replace(/[^-()\d/*+.]/g, ''))();
-                display.value = result;
-            } catch (error) {
-                display.value = 'Error';
-            }
+            const result = basicCalculator(display.value);
+            display.value = result;
         }
+
+        // 기본적인 사칙연산 계산기 함수
+        function basicCalculator(expression) {
+			try {
+				// 숫자와 연산자 분리 (정규식으로 숫자, 연산자 추출)
+				const tokens = expression.match(/(\d+\.?\d*|\+|\-|\*|\/)/g);
+				if (!tokens || tokens.length === 0) return 'Error';
+
+				const stack = [];
+				let currentNumber = 0;
+				let operator = '+';
+
+				for (let i = 0; i <= tokens.length; i++) {
+					const token = tokens[i];
+
+					if (token === undefined || isNaN(token)) {
+						// 이전에 저장된 연산자에 따라 연산 수행
+						switch (operator) {
+							case '+':
+								stack.push(currentNumber);
+								break;
+							case '-':
+								stack.push(-currentNumber);
+								break;
+							case '*':
+								stack.push(stack.pop() * currentNumber);
+								break;
+							case '/':
+								const last = stack.pop();
+								if (currentNumber === 0) return 'Error'; // 0으로 나누기 방지
+								stack.push(last / currentNumber);
+								break;
+						}
+						operator = token;
+						currentNumber = 0;
+					} else {
+						currentNumber = parseFloat(token);
+					}
+				}
+
+				// 스택에 남은 값을 모두 더하여 결과 반환
+				return stack.reduce((acc, cur) => acc + cur, 0);
+			} catch (error) {
+				return 'Error';
+			}
+		}
+
+
     </script>
 </body>
 </html>
