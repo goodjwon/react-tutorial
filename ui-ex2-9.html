@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expense Tracker</title>
+  <style>
+    /* Add your CSS styling here if needed */
+    .expense-container {
+      font-family: Arial, sans-serif;
+    }
+    .expense-container h2 {
+      margin-bottom: 0;
+    }
+    .input-group {
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="expense-container">
+    <h2>9. Expense Tracker</h2>
+    <div class="input-group">
+      <input type="text" id="description" placeholder="Description">
+      <input type="number" id="amount" placeholder="0">
+      <button onclick="addExpense()">Add Expense</button>
+    </div>
+    <ul id="expense-list"></ul>
+    <h3>Total: $<span id="total">0</span></h3>
+  </div>
+
+  <script>
+    let totalAmount = 0;
+
+    function addExpense() {
+      const description = document.getElementById('description').value;
+      const amount = parseFloat(document.getElementById('amount').value);
+
+      if (description && amount) {
+        // Create a new list item for the expense
+        const expenseList = document.getElementById('expense-list');
+        const expenseItem = document.createElement('li');
+        expenseItem.textContent = `${description}: $${amount.toFixed(2)}`;
+        expenseList.appendChild(expenseItem);
+
+        // Update the total
+        totalAmount += amount;
+        document.getElementById('total').textContent = totalAmount.toFixed(2);
+
+        // Clear the input fields
+        document.getElementById('description').value = '';
+        document.getElementById('amount').value = '';
+      } else {
+        alert("Please enter a valid description and amount.");
+      }
+    }
+  </script>
+</body>
+</html>
