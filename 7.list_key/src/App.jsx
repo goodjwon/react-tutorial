@@ -11,7 +11,7 @@ function App() {
   return (
     <BrowserRouter>
       <div>
-        <nav>
+        <nav className="p-2">
           <Link to="/basic">기본 예제</Link>
           <Link to="/intermediate">중급 예제</Link>
           <Link to="/advanced">고급 예제</Link>
