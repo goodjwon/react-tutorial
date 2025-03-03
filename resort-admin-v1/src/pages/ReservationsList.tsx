@@ -55,13 +55,30 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger
+  DialogTitle
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 
+interface Reservation {
+  id: number;
+  reservationNumber: string;
+  name: string;
+  phoneNumber: string;
+  email: string;
+  checkIn: string;
+  checkOut: string;
+  roomType: string;
+  resortCode: string;
+  adults: number;
+  children: number;
+  totalPrice: number;
+  reservationStatus: string;
+  createdAt: string;
+  [key: string]: string | number;
+}
+
 // 가상 데이터
-const getReservations = () => [
+const getReservations = (): Reservation[] => [
   {
     id: 1,
     reservationNumber: "RES12345",
@@ -146,13 +163,13 @@ const getReservations = () => [
 
 const ReservationsList = () => {
   const navigate = useNavigate();
-  const [reservations, setReservations] = useState([]);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [resortFilter, setResortFilter] = useState("ALL");
   const [loading, setLoading] = useState(true);
-  const [sorting, setSorting] = useState({ field: 'createdAt', direction: 'desc' });
-  const [selectedReservation, setSelectedReservation] = useState(null);
+  const [sorting, setSorting] = useState<{ field: keyof Reservation; direction: 'asc' | 'desc' }>({ field: 'createdAt', direction: 'desc' });
+  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -163,7 +180,7 @@ const ReservationsList = () => {
     setLoading(false);
   }, []);
 
-  const handleSort = (field) => {
+  const handleSort = (field: keyof Reservation) => {
     setSorting(prev => ({
       field,
       direction: prev.field === field && prev.direction === 'asc' ? 'desc' : 'asc'
@@ -203,6 +220,8 @@ const ReservationsList = () => {
   );
 
   const handleCancelReservation = () => {
+    if (!selectedReservation) return;
+    
     // 실제 구현에서는 API 호출이 이루어질 것입니다
     setReservations(prev => 
       prev.map(res => 
@@ -214,7 +233,7 @@ const ReservationsList = () => {
     setCancelDialogOpen(false);
   };
 
-  const handleConfirmReservation = (id) => {
+  const handleConfirmReservation = (id: number) => {
     // 실제 구현에서는 API 호출이 이루어질 것입니다
     setReservations(prev => 
       prev.map(res => 
@@ -225,7 +244,7 @@ const ReservationsList = () => {
     );
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case 'CONFIRMED':
         return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">확정</Badge>;
@@ -238,7 +257,7 @@ const ReservationsList = () => {
     }
   };
 
-  const getRoomTypeDisplay = (roomType) => {
+  const getRoomTypeDisplay = (roomType: string) => {
     switch (roomType) {
       case 'STANDARD':
         return '표준';
@@ -251,7 +270,7 @@ const ReservationsList = () => {
     }
   };
 
-  const getResortDisplay = (resortCode) => {
+  const getResortDisplay = (resortCode: string) => {
     switch (resortCode) {
       case 'RESORT1':
         return '리조트 A';
@@ -428,7 +447,6 @@ const ReservationsList = () => {
                   <PaginationItem>
                     <PaginationPrevious 
                       onClick={() => setCurrentPage(page => Math.max(page - 1, 1))}
-                      disabled={currentPage === 1}
                     />
                   </PaginationItem>
                   
@@ -446,7 +464,6 @@ const ReservationsList = () => {
                   <PaginationItem>
                     <PaginationNext 
                       onClick={() => setCurrentPage(page => Math.min(page + 1, totalPages))}
-                      disabled={currentPage === totalPages}
                     />
                   </PaginationItem>
                 </PaginationContent>

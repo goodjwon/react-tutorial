@@ -1,13 +1,13 @@
-// src/App.jsx
+// src/App.tsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Layout from './components/Layout';
-import Dashboard from './pages/Dashboard';
-import ReservationsList from './pages/ReservationsList';
-import ResortCapacity from './pages/ResortCapacity';
-import RaffleManagement from './pages/RaffleManagement';
-import ReservationDetail from './pages/ReservationDetail';
-import Settings from './pages/Settings';
+import Layout from './components/Layout.tsx';
+import Dashboard from './pages/Dashboard.tsx';
+import ReservationsList from './pages/ReservationsList.tsx';
+import ResortCapacity from './pages/ResortCapacity.tsx';
+import RaffleManagement from './pages/RaffleManagement.tsx';
+import ReservationDetail from './pages/ReservationDetail.tsx';
+import Settings from './pages/Settings.tsx';
 
 function App() {
   return (

@@ -18,8 +18,9 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import type { FC } from 'react';
 
-const Layout = () => {
+const Layout: FC = () => {
   const location = useLocation();
   const [open, setOpen] = useState(false);
 

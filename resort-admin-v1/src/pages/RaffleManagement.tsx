@@ -60,8 +60,33 @@ import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
+interface Winner {
+  name: string;
+  phoneNumber: string;
+  email: string;
+}
+
+interface RaffleSchedule {
+  id: number;
+  raffleDate: string;
+  status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED';
+  resortCode: string;
+  roomType: 'STANDARD' | 'DELUXE' | 'SUITE';
+  totalApplications: number;
+  winnersCount: number;
+  createdAt: string;
+  completedAt?: string;
+  winnersList?: Winner[];
+}
+
+interface Resort {
+  code: string;
+  name: string;
+  location: string;
+}
+
 // 가상 데이터 (API 응답 시뮬레이션)
-const getRaffleSchedules = () => [
+const getRaffleSchedules = (): RaffleSchedule[] => [
   {
     id: 1,
     raffleDate: '2024-08-15',
@@ -93,35 +118,28 @@ const getRaffleSchedules = () => [
     winnersList: [
       { name: '김철수', phoneNumber: '010-****-1234', email: 'kim****@example.com' },
       { name: '이영희', phoneNumber: '010-****-2345', email: 'lee****@example.com' },
-      { name: '박지성', phoneNumber: '010-****-3456', email: 'park****@example.com' },
-      { name: '최민수', phoneNumber: '010-****-4567', email: 'choi****@example.com' },
-      { name: '정다운', phoneNumber: '010-****-5678', email: 'jung****@example.com' },
-      { name: '강수진', phoneNumber: '010-****-6789', email: 'kang****@example.com' },
-      { name: '윤세라', phoneNumber: '010-****-7890', email: 'yoon****@example.com' },
-      { name: '조현우', phoneNumber: '010-****-8901', email: 'jo****@example.com' },
-      { name: '한미영', phoneNumber: '010-****-9012', email: 'han****@example.com' },
-      { name: '송재원', phoneNumber: '010-****-0123', email: 'song****@example.com' }
+      { name: '박지성', phoneNumber: '010-****-3456', email: 'park****@example.com' }
     ],
     createdAt: '2024-06-15T09:20:00',
     completedAt: '2024-07-30T10:00:00'
   }
 ];
 
-const getResorts = () => [
+const getResorts = (): Resort[] => [
   { code: 'RESORT1', name: '리조트 A', location: '제주도' },
   { code: 'RESORT2', name: '리조트 B', location: '강원도' },
   { code: 'RESORT3', name: '리조트 C', location: '부산' }
 ];
 
 const RaffleManagement = () => {
-  const [raffleSchedules, setRaffleSchedules] = useState([]);
-  const [resorts, setResorts] = useState([]);
+  const [raffleSchedules, setRaffleSchedules] = useState<RaffleSchedule[]>([]);
+  const [resorts, setResorts] = useState<Resort[]>([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [confirmDeleteDialogOpen, setConfirmDeleteDialogOpen] = useState(false);
   const [confirmExecuteDialogOpen, setConfirmExecuteDialogOpen] = useState(false);
-  const [selectedSchedule, setSelectedSchedule] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedSchedule, setSelectedSchedule] = useState<RaffleSchedule | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedResort, setSelectedResort] = useState('');
   const [selectedRoomType, setSelectedRoomType] = useState('');
   const [winnersCount, setWinnersCount] = useState(5);
@@ -142,13 +160,12 @@ const RaffleManagement = () => {
       return;
     }
 
-    // 실제 구현에서는 API 호출이 이루어질 것입니다
-    const newSchedule = {
+    const newSchedule: RaffleSchedule = {
       id: raffleSchedules.length + 1,
       raffleDate: format(selectedDate, 'yyyy-MM-dd'),
       status: 'SCHEDULED',
       resortCode: selectedResort,
-      roomType: selectedRoomType,
+      roomType: selectedRoomType as RaffleSchedule['roomType'],
       totalApplications: 0,
       winnersCount: winnersCount,
       createdAt: new Date().toISOString()
@@ -163,33 +180,33 @@ const RaffleManagement = () => {
     setFormError('');
     setSuccessMessage('추첨 일정이 성공적으로 생성되었습니다.');
 
-    // 3초 후에 성공 메시지 삭제
     setTimeout(() => {
       setSuccessMessage('');
     }, 3000);
   };
 
   const handleDeleteRaffle = () => {
-    // 실제 구현에서는 API 호출이 이루어질 것입니다
+    if (!selectedSchedule) return;
+    
     setRaffleSchedules(prev => prev.filter(schedule => schedule.id !== selectedSchedule.id));
     setConfirmDeleteDialogOpen(false);
     setSelectedSchedule(null);
     setSuccessMessage('추첨 일정이 삭제되었습니다.');
 
-    // 3초 후에 성공 메시지 삭제
     setTimeout(() => {
       setSuccessMessage('');
     }, 3000);
   };
 
   const handleExecuteRaffle = () => {
-    // 실제 구현에서는 API 호출이 이루어질 것입니다
+    if (!selectedSchedule) return;
+
     setRaffleSchedules(prev => 
       prev.map(schedule => 
         schedule.id === selectedSchedule.id 
           ? { 
               ...schedule, 
-              status: 'COMPLETED', 
+              status: 'COMPLETED' as const, 
               completedAt: new Date().toISOString(),
               winnersList: Array.from({ length: schedule.winnersCount }, (_, i) => ({
                 name: `당첨자 ${i + 1}`,
@@ -204,13 +221,12 @@ const RaffleManagement = () => {
     setSelectedSchedule(null);
     setSuccessMessage('추첨이 성공적으로 실행되었습니다.');
 
-    // 3초 후에 성공 메시지 삭제
     setTimeout(() => {
       setSuccessMessage('');
     }, 3000);
   };
 
-  const getRoomTypeDisplay = (roomType) => {
+  const getRoomTypeDisplay = (roomType: RaffleSchedule['roomType']): string => {
     switch (roomType) {
       case 'STANDARD':
         return '스탠다드';
@@ -223,7 +239,7 @@ const RaffleManagement = () => {
     }
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status: RaffleSchedule['status']) => {
     switch (status) {
       case 'SCHEDULED':
         return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">예정됨</Badge>;
@@ -236,11 +252,11 @@ const RaffleManagement = () => {
     }
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string): string => {
     return format(new Date(dateString), 'yyyy년 MM월 dd일');
   };
 
-  const formatDateTime = (dateTimeString) => {
+  const formatDateTime = (dateTimeString: string): string => {
     return format(new Date(dateTimeString), 'yyyy년 MM월 dd일 HH:mm');
   };
 
@@ -261,10 +277,109 @@ const RaffleManagement = () => {
       {/* 상단 헤더 및 버튼 */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">추첨 관리</h2>
-        <Button onClick={() => setCreateDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          새 추첨 일정 생성
-        </Button>
+        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              새 추첨 일정 생성
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>추첨 일정 생성</DialogTitle>
+              <DialogDescription>
+                새로운 추첨 일정을 생성합니다. 모든 필드를 채워주세요.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              {formError && (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>오류</AlertTitle>
+                  <AlertDescription>{formError}</AlertDescription>
+                </Alert>
+              )}
+
+              <div className="space-y-2">
+                <Label>추첨 날짜</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {selectedDate ? format(selectedDate, 'PPP', { locale: ko }) : '날짜 선택'}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate || undefined}
+                      onSelect={(date) => setSelectedDate(date || null)}
+                      disabled={(date) => date < new Date()}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="resort">리조트</Label>
+                <Select value={selectedResort} onValueChange={setSelectedResort}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="리조트 선택" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {resorts.map(resort => (
+                        <SelectItem key={resort.code} value={resort.code}>
+                          {resort.name} ({resort.location})
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="roomType">객실 유형</Label>
+                <Select value={selectedRoomType} onValueChange={setSelectedRoomType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="객실 유형 선택" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectItem value="STANDARD">스탠다드</SelectItem>
+                      <SelectItem value="DELUXE">디럭스</SelectItem>
+                      <SelectItem value="SUITE">스위트</SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="winnersCount">당첨자 수</Label>
+                <Input
+                  id="winnersCount"
+                  type="number"
+                  min={1}
+                  max={50}
+                  value={winnersCount}
+                  onChange={(e) => setWinnersCount(parseInt(e.target.value))}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+                취소
+              </Button>
+              <Button onClick={handleCreateRaffle}>
+                추첨 일정 생성
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* 성공 메시지 */}
@@ -304,10 +419,6 @@ const RaffleManagement = () => {
               <CardContent className="pt-6 text-center">
                 <Info className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-500">예정된 추첨 일정이 없습니다.</p>
-                <Button className="mt-4" variant="outline" onClick={() => setCreateDialogOpen(true)}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  새 추첨 일정 생성
-                </Button>
               </CardContent>
             </Card>
           ) : (
@@ -393,7 +504,7 @@ const RaffleManagement = () => {
                       {getStatusBadge(schedule.status)}
                     </CardTitle>
                     <CardDescription>
-                      완료일시: {formatDateTime(schedule.completedAt)}
+                      완료일시: {schedule.completedAt && formatDateTime(schedule.completedAt)}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -415,6 +526,12 @@ const RaffleManagement = () => {
                           <p className="text-sm font-medium text-gray-500">당첨자 수</p>
                           <p>{schedule.winnersCount}명</p>
                         </div>
+                        {schedule.completedAt && (
+                          <div>
+                            <p className="text-sm font-medium text-gray-500">완료 일시</p>
+                            <p>{schedule.completedAt ? formatDateTime(schedule.completedAt) : ''}</p>
+                          </div>
+                        )}
                       </div>
 
                       <div>
@@ -430,7 +547,7 @@ const RaffleManagement = () => {
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {schedule.winnersList.map((winner, index) => (
+                              {schedule.winnersList?.map((winner, index) => (
                                 <TableRow key={index}>
                                   <TableCell>{index + 1}</TableCell>
                                   <TableCell>{winner.name}</TableCell>
@@ -456,105 +573,6 @@ const RaffleManagement = () => {
           )}
         </TabsContent>
       </Tabs>
-
-      {/* 추첨 생성 다이얼로그 */}
-      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>추첨 일정 생성</DialogTitle>
-            <DialogDescription>
-              새로운 추첨 일정을 생성합니다. 모든 필드를 채워주세요.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            {formError && (
-              <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>오류</AlertTitle>
-                <AlertDescription>{formError}</AlertDescription>
-              </Alert>
-            )}
-
-            <div className="space-y-2">
-              <Label>추첨 날짜</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-left font-normal"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {selectedDate ? format(selectedDate, 'PPP', { locale: ko }) : '날짜 선택'}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    disabled={(date) => date < new Date()}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="resort">리조트</Label>
-              <Select value={selectedResort} onValueChange={setSelectedResort}>
-                <SelectTrigger>
-                  <SelectValue placeholder="리조트 선택" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {resorts.map(resort => (
-                      <SelectItem key={resort.code} value={resort.code}>
-                        {resort.name} ({resort.location})
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="roomType">객실 유형</Label>
-              <Select value={selectedRoomType} onValueChange={setSelectedRoomType}>
-                <SelectTrigger>
-                  <SelectValue placeholder="객실 유형 선택" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    <SelectItem value="STANDARD">스탠다드</SelectItem>
-                    <SelectItem value="DELUXE">디럭스</SelectItem>
-                    <SelectItem value="SUITE">스위트</SelectItem>
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="winnersCount">당첨자 수</Label>
-              <Input
-                id="winnersCount"
-                type="number"
-                min={1}
-                max={50}
-                value={winnersCount}
-                onChange={(e) => setWinnersCount(parseInt(e.target.value))}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
-              취소
-            </Button>
-            <Button onClick={handleCreateRaffle}>
-              추첨 일정 생성
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* 추첨 삭제 확인 다이얼로그 */}
       <Dialog open={confirmDeleteDialogOpen} onOpenChange={setConfirmDeleteDialogOpen}>
