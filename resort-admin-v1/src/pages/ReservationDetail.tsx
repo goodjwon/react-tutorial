@@ -46,8 +46,35 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
 
+interface Reservation {
+  id: number;
+  reservationNumber: string;
+  name: string;
+  phoneNumber: string;
+  email: string;
+  checkIn: string;
+  checkOut: string;
+  roomType: 'STANDARD' | 'DELUXE' | 'SUITE';
+  resortCode: string;
+  resortName: string;
+  adults: number;
+  children: number;
+  totalPrice: number;
+  pricePerDay: number;
+  reservationStatus: 'CONFIRMED' | 'PENDING' | 'CANCELLED';
+  paymentStatus: 'PAID' | 'UNPAID';
+  specialRequests?: string;
+  createdAt: string;
+  updatedAt: string;
+  history: Array<{
+    timestamp: string;
+    action: string;
+    description: string;
+  }>;
+}
+
 // 가상 데이터 (API 응답 시뮬레이션)
-const getReservationDetails = (id) => ({
+const getReservationDetails = (id: string): Reservation => ({
   id: 1,
   reservationNumber: id,
   name: "홍길동",
@@ -55,7 +82,7 @@ const getReservationDetails = (id) => ({
   email: "hong@example.com",
   checkIn: "2024-08-01",
   checkOut: "2024-08-03",
-  roomType: "STANDARD",
+  roomType: "STANDARD" as const,
   resortCode: "RESORT1",
   resortName: "리조트 A",
   adults: 2,
@@ -66,7 +93,6 @@ const getReservationDetails = (id) => ({
   createdAt: "2024-07-15T09:30:00",
   updatedAt: "2024-07-15T10:15:00",
   paymentStatus: "PAID",
-  paymentMethod: "CARD",
   specialRequests: "조용한 방으로 배정 부탁드립니다.",
   history: [
     { 
@@ -90,7 +116,7 @@ const getReservationDetails = (id) => ({
 const ReservationDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [reservation, setReservation] = useState(null);
+  const [reservation, setReservation] = useState<Reservation | null>(null);
   const [loading, setLoading] = useState(true);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -98,68 +124,71 @@ const ReservationDetail = () => {
   const [selectedTemplate, setSelectedTemplate] = useState("confirmation");
 
   useEffect(() => {
-    // 실제 구현에서는 API 호출이 이루어질 것입니다
+    if (!id) return;
     setReservation(getReservationDetails(id));
     setLoading(false);
   }, [id]);
 
   const handleCancelReservation = () => {
-    // 실제 구현에서는 API 호출이 이루어질 것입니다
-    setReservation(prev => ({
-      ...prev,
+    if (!reservation) return;
+    
+    setReservation({
+      ...reservation,
       reservationStatus: "CANCELLED",
       history: [
-        ...prev.history,
+        ...reservation.history,
         {
           timestamp: new Date().toISOString(),
           action: "STATUS_CHANGED",
           description: "예약 상태가 확정에서 취소로 변경되었습니다."
         }
       ]
-    }));
+    });
     setCancelDialogOpen(false);
   };
 
-  const handleEditReservation = (data) => {
-    // 실제 구현에서는 API 호출이 이루어질 것입니다
-    setReservation(prev => ({
-      ...prev,
+  const handleEditReservation = (data: Partial<Reservation>) => {
+    if (!reservation) return;
+    
+    setReservation({
+      ...reservation,
       ...data,
       updatedAt: new Date().toISOString(),
       history: [
-        ...prev.history,
+        ...reservation.history,
         {
           timestamp: new Date().toISOString(),
           action: "UPDATED",
           description: "예약 정보가 수정되었습니다."
         }
       ]
-    }));
+    });
     setEditDialogOpen(false);
   };
 
-  const handleSendMessage = (templateType) => {
-    // 실제 구현에서는 API 호출이 이루어질 것입니다
+  const handleSendMessage = (templateType: 'email' | 'sms') => {
+    if (!reservation) return;
+    
     const messageType = templateType === "email" ? "EMAIL_SENT" : "SMS_SENT";
     const description = templateType === "email" 
       ? `예약 관련 이메일(${selectedTemplate})이 발송되었습니다.` 
       : `예약 관련 SMS(${selectedTemplate})가 발송되었습니다.`;
 
-    setReservation(prev => ({
-      ...prev,
+    setReservation({
+      ...reservation,
       history: [
-        ...prev.history,
+        ...reservation.history,
         {
           timestamp: new Date().toISOString(),
           action: messageType,
           description
         }
       ]
-    }));
+    });
     setMessageDialogOpen(false);
   };
 
-  const getStatusBadge = (status) => {
+  const getStatusBadge = (status: 'CONFIRMED' | 'PENDING' | 'CANCELLED') => {
     switch (status) {
       case 'CONFIRMED':
         return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">확정</Badge>;
@@ -172,7 +201,7 @@ const ReservationDetail = () => {
     }
   };
 
-  const getRoomTypeDisplay = (roomType) => {
+  const getRoomTypeDisplay = (roomType: 'STANDARD' | 'DELUXE' | 'SUITE') => {
     switch (roomType) {
       case 'STANDARD':
         return '표준';
@@ -185,7 +214,7 @@ const ReservationDetail = () => {
     }
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('ko-KR', {
       year: 'numeric',
@@ -196,7 +225,7 @@ const ReservationDetail = () => {
     }).format(date);
   };
 
-  const formatPrice = (price) => {
+  const formatPrice = (price: number) => {
     return new Intl.NumberFormat('ko-KR', {
       style: 'currency',
       currency: 'KRW',
@@ -337,7 +366,7 @@ const ReservationDetail = () => {
                   </div>
                   <div className="flex items-center justify-between ml-6">
                     <p>숙박 일수</p>
-                    <p>{(new Date(reservation.checkOut) - new Date(reservation.checkIn)) / (1000 * 60 * 60 * 24)}박</p>
+                    <p>{(new Date(reservation.checkOut).getTime() - new Date(reservation.checkIn).getTime()) / (1000 * 60 * 60 * 24)}박</p>
                   </div>
                 </div>
 
@@ -524,11 +553,11 @@ const ReservationDetail = () => {
               취소
             </Button>
             <Button onClick={() => handleEditReservation({
-              checkIn: document.getElementById('checkIn').value,
-              checkOut: document.getElementById('checkOut').value,
-              adults: parseInt(document.getElementById('adults').value),
-              children: parseInt(document.getElementById('children').value),
-              specialRequests: document.getElementById('specialRequests').value
+              checkIn: (document.getElementById('checkIn') as HTMLInputElement).value,
+              checkOut: (document.getElementById('checkOut') as HTMLInputElement).value,
+              adults: parseInt((document.getElementById('adults') as HTMLInputElement).value),
+              children: parseInt((document.getElementById('children') as HTMLInputElement).value),
+              specialRequests: (document.getElementById('specialRequests') as HTMLTextAreaElement).value
             })}>
               저장
             </Button>

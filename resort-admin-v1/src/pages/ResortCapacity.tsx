@@ -42,7 +42,7 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
 // 가상 데이터 (API 응답 시뮬레이션)
-const getResortCapacity = (resortCode, startDate, endDate) => {
+const getResortCapacity = (_resortCode: string, _startDate: string, _endDate: string) => {
   // 실제 API 호출 시뮬레이션
   return [
     {
@@ -199,7 +199,7 @@ const getResortDetails = () => [
   { code: 'RESORT3', name: '리조트 C', location: '부산', rooms: 50 }
 ];
 
-const getRoomDetails = (resortCode, roomType) => {
+const getRoomDetails = (_resortCode: string, roomType: string) => {
   // 실제 API 호출 시뮬레이션
   return {
     roomType: roomType,
@@ -213,7 +213,7 @@ const getRoomDetails = (resortCode, roomType) => {
   };
 };
 
-const getRoomTypeDisplay = (roomType) => {
+const getRoomTypeDisplay = (roomType: 'STANDARD' | 'DELUXE' | 'SUITE') => {
   switch (roomType) {
     case 'STANDARD':
       return '스탠다드';
@@ -226,7 +226,7 @@ const getRoomTypeDisplay = (roomType) => {
   }
 };
 
-const formatPrice = (price) => {
+const formatPrice = (price: number) => {
   return new Intl.NumberFormat('ko-KR', {
     style: 'currency',
     currency: 'KRW',
@@ -238,11 +238,11 @@ const ResortCapacity = () => {
   const [selectedResort, setSelectedResort] = useState('RESORT1');
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date(new Date().setDate(new Date().getDate() + 7)));
-  const [capacityData, setCapacityData] = useState([]);
-  const [resorts, setResorts] = useState([]);
+  const [capacityData, setCapacityData] = useState<Array<{ date: string; roomTypes: Array<{ roomType: string; capacity: number; occupied: number; available: number; price: number; season: string; }> }>>([]);
+  const [resorts, setResorts] = useState<Array<{ code: string; name: string; location: string; rooms: number; }>>([]);
   const [loading, setLoading] = useState(true);
   const [roomTypeFilter, setRoomTypeFilter] = useState('ALL');
-  const [selectedRoomDetails, setSelectedRoomDetails] = useState(null);
+  const [selectedRoomDetails, setSelectedRoomDetails] = useState<{ roomType: string; name: string; description: string; amenities: string[]; maxOccupancy: number; size: string; bedType: string; images: string[]; } | null>(null);
   const [viewType, setViewType] = useState('table');
 
   useEffect(() => {
@@ -257,7 +257,7 @@ const ResortCapacity = () => {
     setLoading(false);
   }, [selectedResort, startDate, endDate]);
 
-  const handleRoomTypeClick = (resortCode, roomType) => {
+  const handleRoomTypeClick = (resortCode: string, roomType: 'STANDARD' | 'DELUXE' | 'SUITE') => {
     const details = getRoomDetails(resortCode, roomType);
     setSelectedRoomDetails(details);
   };
@@ -273,7 +273,7 @@ const ResortCapacity = () => {
     };
   });
 
-  const getAvailabilityColor = (available, capacity) => {
+  const getAvailabilityColor = (available: number, capacity: number) => {
     const ratio = available / capacity;
     if (ratio === 0) return 'bg-red-100 text-red-800';
     if (ratio < 0.2) return 'bg-orange-100 text-orange-800';
@@ -328,7 +328,7 @@ const ResortCapacity = () => {
                   <Calendar
                     mode="single"
                     selected={startDate}
-                    onSelect={setStartDate}
+                    onSelect={(date) => date && setStartDate(date)}
                     initialFocus
                   />
                 </PopoverContent>
@@ -351,7 +351,7 @@ const ResortCapacity = () => {
                   <Calendar
                     mode="single"
                     selected={endDate}
-                    onSelect={setEndDate}
+                    onSelect={(date) => date && setEndDate(date)}
                     initialFocus
                     disabled={(date) => date < startDate}
                   />
@@ -424,14 +424,14 @@ const ResortCapacity = () => {
                         <TableRow 
                           key={`${dayIndex}-${roomIndex}`}
                           className="cursor-pointer hover:bg-gray-50"
-                          onClick={() => handleRoomTypeClick(selectedResort, room.roomType)}
+                          onClick={() => handleRoomTypeClick(selectedResort, room.roomType as 'STANDARD' | 'DELUXE' | 'SUITE')}
                         >
                           {roomIndex === 0 && (
                             <TableCell rowSpan={day.roomTypes.length} className="font-medium">
                               {day.date}
                             </TableCell>
                           )}
-                          <TableCell>{getRoomTypeDisplay(room.roomType)}</TableCell>
+                          <TableCell>{getRoomTypeDisplay(room.roomType as 'STANDARD' | 'DELUXE' | 'SUITE')}</TableCell>
                           <TableCell className="text-right font-medium">
                             {formatPrice(room.price)}
                           </TableCell>
@@ -468,10 +468,10 @@ const ResortCapacity = () => {
                     <div 
                       key={roomIndex} 
                       className="p-4 border rounded-md cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleRoomTypeClick(selectedResort, room.roomType)}
+                      onClick={() => handleRoomTypeClick(selectedResort, room.roomType as 'STANDARD' | 'DELUXE' | 'SUITE')}
                     >
                       <div className="flex justify-between items-center mb-2">
-                        <h3 className="font-medium">{getRoomTypeDisplay(room.roomType)}</h3>
+                        <h3 className="font-medium">{getRoomTypeDisplay(room.roomType as 'STANDARD' | 'DELUXE' | 'SUITE')}</h3>
                         <Badge className={getAvailabilityColor(room.available, room.capacity)}>
                           {room.available}/{room.capacity} 가능
                         </Badge>

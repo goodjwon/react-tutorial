@@ -27,6 +27,35 @@ import {
   Bar
 } from 'recharts';
 
+interface ReservationStats {
+  total: number;
+  confirmed: number;
+  pending: number;
+  cancelled: number;
+}
+
+interface RecentReservation {
+  id: string;
+  name: string;
+  resort: string;
+  checkIn: string;
+  status: 'CONFIRMED' | 'PENDING' | 'CANCELLED';
+}
+
+interface MonthlyData {
+  name: string;
+  RESORT1: number;
+  RESORT2: number;
+  RESORT3: number;
+}
+
+interface OccupancyData {
+  name: string;
+  표준: number;
+  디럭스: number;
+  스위트: number;
+}
+
 // 가상 데이터 (실제로는 API에서 가져올 것)
 const getReservationStats = () => ({
   total: 248,
@@ -35,7 +64,7 @@ const getReservationStats = () => ({
   cancelled: 20
 });
 
-const getRecentReservations = () => [
+const getRecentReservations = (): RecentReservation[] => [
   { id: "RES12761", name: "김철수", resort: "RESORT1", checkIn: "2024-08-01", status: "CONFIRMED" },
   { id: "RES12760", name: "이영희", resort: "RESORT2", checkIn: "2024-08-02", status: "CONFIRMED" },
   { id: "RES12759", name: "박지성", resort: "RESORT3", checkIn: "2024-08-01", status: "PENDING" },
@@ -59,10 +88,10 @@ const getResortOccupancy = () => [
 ];
 
 const Dashboard = () => {
-  const [stats, setStats] = useState(null);
-  const [recentReservations, setRecentReservations] = useState([]);
-  const [monthlyData, setMonthlyData] = useState([]);
-  const [occupancyData, setOccupancyData] = useState([]);
+  const [stats, setStats] = useState<ReservationStats | null>(null);
+  const [recentReservations, setRecentReservations] = useState<RecentReservation[]>([]);
+  const [monthlyData, setMonthlyData] = useState<MonthlyData[]>([]);
+  const [occupancyData, setOccupancyData] = useState<OccupancyData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -74,7 +103,7 @@ const Dashboard = () => {
     setLoading(false);
   }, []);
 
-  const statusColor = (status) => {
+  const statusColor = (status: RecentReservation['status']) => {
     switch (status) {
       case 'CONFIRMED': return 'text-green-600';
       case 'PENDING': return 'text-amber-600';
@@ -83,7 +112,7 @@ const Dashboard = () => {
     }
   };
 
-  const statusIcon = (status) => {
+  const statusIcon = (status: RecentReservation['status']) => {
     switch (status) {
       case 'CONFIRMED': return <CheckCircle className="h-5 w-5 text-green-600" />;
       case 'PENDING': return <Clock className="h-5 w-5 text-amber-600" />;
@@ -100,49 +129,53 @@ const Dashboard = () => {
     <div className="space-y-6">
       {/* 통계 카드 */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">총 예약</CardTitle>
-            <CalendarDays className="h-4 w-4 text-gray-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-            <p className="text-xs text-gray-500">지난달 대비 +12%</p>
-          </CardContent>
-        </Card>
+        {stats && (
+          <>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">총 예약</CardTitle>
+                <CalendarDays className="h-4 w-4 text-gray-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.total}</div>
+                <p className="text-xs text-gray-500">지난달 대비 +12%</p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">확정 예약</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.confirmed}</div>
-            <p className="text-xs text-gray-500">확정률 {Math.round((stats.confirmed / stats.total) * 100)}%</p>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">확정 예약</CardTitle>
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.confirmed}</div>
+                <p className="text-xs text-gray-500">확정률 {Math.round((stats.confirmed / stats.total) * 100)}%</p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">대기 예약</CardTitle>
-            <Clock className="h-4 w-4 text-amber-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.pending}</div>
-            <p className="text-xs text-gray-500">처리 필요</p>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">대기 예약</CardTitle>
+                <Clock className="h-4 w-4 text-amber-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.pending}</div>
+                <p className="text-xs text-gray-500">처리 필요</p>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">취소 예약</CardTitle>
-            <XCircle className="h-4 w-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.cancelled}</div>
-            <p className="text-xs text-gray-500">취소율 {Math.round((stats.cancelled / stats.total) * 100)}%</p>
-          </CardContent>
-        </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">취소 예약</CardTitle>
+                <XCircle className="h-4 w-4 text-red-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats.cancelled}</div>
+                <p className="text-xs text-gray-500">취소율 {Math.round((stats.cancelled / stats.total) * 100)}%</p>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
       {/* 차트 및 테이블 */}

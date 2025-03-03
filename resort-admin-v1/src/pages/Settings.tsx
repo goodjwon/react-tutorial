@@ -28,7 +28,8 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
+  DialogClose
 } from '@/components/ui/dialog';
 import {
   Alert,
@@ -36,6 +37,35 @@ import {
   AlertTitle
 } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+
+interface Settings {
+  resorts: Array<{
+    id: number;
+    code: string;
+    name: string;
+    location: string;
+    apiUrl: string;
+    apiKey: string;
+    active: boolean;
+  }>;
+  emailSettings: {
+    smtpServer: string;
+    smtpPort: number;
+    senderEmail: string;
+    senderName: string;
+    username: string;
+    password: string;
+  };
+  smsSettings: {
+    providerUrl: string;
+    apiKey: string;
+    senderNumber: string;
+  };
+  systemSettings: {
+    raffleTime: string;
+    reminderDays: number;
+  };
+}
 
 // 가상 데이터 (API 응답 시뮬레이션)
 const getSettings = () => ({
@@ -88,12 +118,31 @@ const getSettings = () => ({
 });
 
 const Settings = () => {
-  const [settings, setSettings] = useState(null);
+  const [settings, setSettings] = useState<Settings>({
+    resorts: [],
+    emailSettings: {
+      smtpServer: '',
+      smtpPort: 587,
+      senderEmail: '',
+      senderName: '',
+      username: '',
+      password: ''
+    },
+    smsSettings: {
+      providerUrl: '',
+      apiKey: '',
+      senderNumber: ''
+    },
+    systemSettings: {
+      raffleTime: '10:00',
+      reminderDays: 2
+    }
+  });
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('resorts');
   const [editResortDialogOpen, setEditResortDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedResort, setSelectedResort] = useState(null);
+  const [selectedResort, setSelectedResort] = useState<Settings['resorts'][0] | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
   
   // 리조트 편집을 위한 폼 상태
@@ -144,7 +193,7 @@ const Settings = () => {
     // 실제 구현에서는 API 호출이 이루어질 것입니다
     if (selectedResort) {
       // 리조트 수정
-      setSettings(prev => ({
+      setSettings((prev: Settings) => ({
         ...prev,
         resorts: prev.resorts.map(resort => 
           resort.id === selectedResort.id ? { ...resort, ...editForm } : resort
@@ -154,10 +203,10 @@ const Settings = () => {
     } else {
       // 새 리조트 추가
       const newResort = {
-        id: settings.resorts.length + 1,
+        id: (settings?.resorts?.length ?? 0) + 1,
         ...editForm
       };
-      setSettings(prev => ({
+      setSettings((prev: Settings) => ({
         ...prev,
         resorts: [...prev.resorts, newResort]
       }));
@@ -174,9 +223,9 @@ const Settings = () => {
 
   const handleDeleteResort = () => {
     // 실제 구현에서는 API 호출이 이루어질 것입니다
-    setSettings(prev => ({
+    setSettings((prev: Settings) => ({
       ...prev,
-      resorts: prev.resorts.filter(resort => resort.id !== selectedResort.id)
+      resorts: prev.resorts.filter(resort => resort.id !== selectedResort?.id)
     }));
     setDeleteDialogOpen(false);
     setSelectedResort(null);
@@ -188,9 +237,8 @@ const Settings = () => {
     }, 3000);
   };
 
-  const handleToggleResortActive = (resortId, active) => {
-    // 실제 구현에서는 API 호출이 이루어질 것입니다
-    setSettings(prev => ({
+  const handleToggleResortActive = (resortId: number, active: boolean) => {
+    setSettings((prev: Settings) => ({
       ...prev,
       resorts: prev.resorts.map(resort => 
         resort.id === resortId ? { ...resort, active } : resort
@@ -624,9 +672,9 @@ const Settings = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditResortDialogOpen(false)}>
-              취소
-            </Button>
+            <DialogClose asChild>
+              <Button variant="outline">취소</Button>
+            </DialogClose>
             <Button onClick={handleSaveResort}>
               저장
             </Button>
@@ -653,9 +701,9 @@ const Settings = () => {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-              취소
-            </Button>
+            <DialogClose asChild>
+              <Button variant="outline">취소</Button>
+            </DialogClose>
             <Button variant="destructive" onClick={handleDeleteResort}>
               삭제 확인
             </Button>
