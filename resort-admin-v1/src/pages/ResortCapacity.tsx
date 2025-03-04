@@ -300,7 +300,7 @@ const ResortCapacity = () => {
                 <SelectTrigger id="resort">
                   <SelectValue placeholder="리조트 선택" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="select-content">
                   <SelectGroup>
                     {resorts.map(resort => (
                       <SelectItem key={resort.code} value={resort.code}>
@@ -324,7 +324,7 @@ const ResortCapacity = () => {
                     {format(startDate, 'PPP', { locale: ko })}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
+                <PopoverContent className="w-auto p-0 popover-content">
                   <Calendar
                     mode="single"
                     selected={startDate}
@@ -347,7 +347,7 @@ const ResortCapacity = () => {
                     {format(endDate, 'PPP', { locale: ko })}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
+                <PopoverContent className="w-auto p-0 popover-content">
                   <Calendar
                     mode="single"
                     selected={endDate}
@@ -365,7 +365,7 @@ const ResortCapacity = () => {
                 <SelectTrigger id="roomType">
                   <SelectValue placeholder="객실 유형 선택" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="select-content">
                   <SelectGroup>
                     <SelectItem value="ALL">모든 객실</SelectItem>
                     <SelectItem value="STANDARD">스탠다드</SelectItem>
@@ -380,114 +380,116 @@ const ResortCapacity = () => {
       </Card>
 
       {/* 뷰 타입 선택 */}
-      <div className="flex justify-end">
-        <Tabs value={viewType} onValueChange={setViewType}>
-          <TabsList>
-            <TabsTrigger value="table">테이블 보기</TabsTrigger>
-            <TabsTrigger value="grid">그리드 보기</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
+      <div className="flex flex-col w-full">
+        <Tabs value={viewType} onValueChange={setViewType} className="w-full">
+          <div className="flex justify-end mb-4">
+            <TabsList>
+              <TabsTrigger value="table">테이블 보기</TabsTrigger>
+              <TabsTrigger value="grid">그리드 보기</TabsTrigger>
+            </TabsList>
+          </div>
 
-      {/* 테이블 뷰 */}
-      <TabsContent value="table" className="mt-0">
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {resorts.find(r => r.code === selectedResort)?.name} 객실 현황
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[150px]">날짜</TableHead>
-                    <TableHead>객실 유형</TableHead>
-                    <TableHead className="text-right">가격</TableHead>
-                    <TableHead className="text-center">총 객실 수</TableHead>
-                    <TableHead className="text-center">예약됨</TableHead>
-                    <TableHead className="text-center">예약 가능</TableHead>
-                    <TableHead>시즌</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredCapacityData.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center py-6 text-gray-500">
-                        데이터가 없습니다
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    filteredCapacityData.flatMap((day, dayIndex) => 
-                      day.roomTypes.map((room, roomIndex) => (
-                        <TableRow 
-                          key={`${dayIndex}-${roomIndex}`}
-                          className="cursor-pointer hover:bg-gray-50"
-                          onClick={() => handleRoomTypeClick(selectedResort, room.roomType as 'STANDARD' | 'DELUXE' | 'SUITE')}
-                        >
-                          {roomIndex === 0 && (
-                            <TableCell rowSpan={day.roomTypes.length} className="font-medium">
-                              {day.date}
-                            </TableCell>
-                          )}
-                          <TableCell>{getRoomTypeDisplay(room.roomType as 'STANDARD' | 'DELUXE' | 'SUITE')}</TableCell>
-                          <TableCell className="text-right font-medium">
-                            {formatPrice(room.price)}
-                          </TableCell>
-                          <TableCell className="text-center">{room.capacity}</TableCell>
-                          <TableCell className="text-center">{room.occupied}</TableCell>
-                          <TableCell className="text-center">
-                            <Badge className={getAvailabilityColor(room.available, room.capacity)}>
-                              {room.available}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>{room.season}</TableCell>
-                        </TableRow>
-                      ))
-                    )
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-      </TabsContent>
-
-      {/* 그리드 뷰 */}
-      <TabsContent value="grid" className="mt-0">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {filteredCapacityData.map((day, dayIndex) => (
-            <Card key={dayIndex}>
+          {/* 테이블 뷰 */}
+          <TabsContent value="table" className="mt-0 w-full">
+            <Card className="w-full">
               <CardHeader>
-                <CardTitle className="text-lg">{day.date}</CardTitle>
+                <CardTitle className="text-left">
+                  {resorts.find(r => r.code === selectedResort)?.name} 객실 현황
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {day.roomTypes.map((room, roomIndex) => (
-                    <div 
-                      key={roomIndex} 
-                      className="p-4 border rounded-md cursor-pointer hover:bg-gray-50"
-                      onClick={() => handleRoomTypeClick(selectedResort, room.roomType as 'STANDARD' | 'DELUXE' | 'SUITE')}
-                    >
-                      <div className="flex justify-between items-center mb-2">
-                        <h3 className="font-medium">{getRoomTypeDisplay(room.roomType as 'STANDARD' | 'DELUXE' | 'SUITE')}</h3>
-                        <Badge className={getAvailabilityColor(room.available, room.capacity)}>
-                          {room.available}/{room.capacity} 가능
-                        </Badge>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-500">시즌: {room.season}</span>
-                        <span className="font-medium">{formatPrice(room.price)}</span>
-                      </div>
-                    </div>
-                  ))}
+                <div className="rounded-md border w-full">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[150px]">날짜</TableHead>
+                        <TableHead>객실 유형</TableHead>
+                        <TableHead className="text-right">가격</TableHead>
+                        <TableHead className="text-center">총 객실 수</TableHead>
+                        <TableHead className="text-center">예약됨</TableHead>
+                        <TableHead className="text-center">예약 가능</TableHead>
+                        <TableHead>시즌</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredCapacityData.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={7} className="text-center py-6 text-gray-500">
+                            데이터가 없습니다
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredCapacityData.flatMap((day, dayIndex) => 
+                          day.roomTypes.map((room, roomIndex) => (
+                            <TableRow 
+                              key={`${dayIndex}-${roomIndex}`}
+                              className="cursor-pointer hover:bg-gray-50"
+                              onClick={() => handleRoomTypeClick(selectedResort, room.roomType as 'STANDARD' | 'DELUXE' | 'SUITE')}
+                            >
+                              {roomIndex === 0 && (
+                                <TableCell rowSpan={day.roomTypes.length} className="font-medium">
+                                  {day.date}
+                                </TableCell>
+                              )}
+                              <TableCell>{getRoomTypeDisplay(room.roomType as 'STANDARD' | 'DELUXE' | 'SUITE')}</TableCell>
+                              <TableCell className="text-right font-medium">
+                                {formatPrice(room.price)}
+                              </TableCell>
+                              <TableCell className="text-center">{room.capacity}</TableCell>
+                              <TableCell className="text-center">{room.occupied}</TableCell>
+                              <TableCell className="text-center">
+                                <Badge className={getAvailabilityColor(room.available, room.capacity)}>
+                                  {room.available}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>{room.season}</TableCell>
+                            </TableRow>
+                          ))
+                        )
+                      )}
+                    </TableBody>
+                  </Table>
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
-      </TabsContent>
+          </TabsContent>
+
+          {/* 그리드 뷰 */}
+          <TabsContent value="grid" className="mt-0">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {filteredCapacityData.map((day, dayIndex) => (
+                <Card key={dayIndex}>
+                  <CardHeader>
+                    <CardTitle className="text-lg">{day.date}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {day.roomTypes.map((room, roomIndex) => (
+                        <div 
+                          key={roomIndex} 
+                          className="p-4 border rounded-md cursor-pointer hover:bg-gray-50"
+                          onClick={() => handleRoomTypeClick(selectedResort, room.roomType as 'STANDARD' | 'DELUXE' | 'SUITE')}
+                        >
+                          <div className="flex justify-between items-center mb-2">
+                            <h3 className="font-medium">{getRoomTypeDisplay(room.roomType as 'STANDARD' | 'DELUXE' | 'SUITE')}</h3>
+                            <Badge className={getAvailabilityColor(room.available, room.capacity)}>
+                              {room.available}/{room.capacity} 가능
+                            </Badge>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-gray-500">시즌: {room.season}</span>
+                            <span className="font-medium">{formatPrice(room.price)}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
 
       {/* 객실 상세 정보 */}
       {selectedRoomDetails && (
@@ -499,46 +501,39 @@ const ResortCapacity = () => {
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-4">
                 <div>
-                  <h3 className="font-medium text-gray-500 mb-1">설명</h3>
-                  <p>{selectedRoomDetails.description}</p>
+                  <h4 className="font-medium mb-2">객실 설명</h4>
+                  <p className="text-gray-600">{selectedRoomDetails.description}</p>
                 </div>
-                
                 <div>
-                  <h3 className="font-medium text-gray-500 mb-1">편의시설</h3>
-                  <div className="flex flex-wrap gap-2">
+                  <h4 className="font-medium mb-2">편의 시설</h4>
+                  <ul className="list-disc list-inside text-gray-600">
                     {selectedRoomDetails.amenities.map((amenity, index) => (
-                      <Badge key={index} variant="outline">{amenity}</Badge>
+                      <li key={index}>{amenity}</li>
                     ))}
-                  </div>
+                  </ul>
                 </div>
               </div>
-              
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <h3 className="font-medium text-gray-500 mb-1">면적</h3>
-                    <p>{selectedRoomDetails.size}</p>
-                  </div>
-                  
-                  <div>
-                    <h3 className="font-medium text-gray-500 mb-1">최대 인원</h3>
-                    <div className="flex items-center">
-                      <Users className="h-4 w-4 mr-1 text-gray-500" />
-                      <p>{selectedRoomDetails.maxOccupancy}명</p>
-                    </div>
-                  </div>
-                  
-                  <div className="col-span-2">
-                    <h3 className="font-medium text-gray-500 mb-1">침대 타입</h3>
-                    <p>{selectedRoomDetails.bedType}</p>
-                  </div>
-                </div>
-                
                 <div>
-                  <Button variant="outline" className="w-full">
-                    <Hotel className="mr-2 h-4 w-4" />
-                    객실 이미지 보기
-                  </Button>
+                  <h4 className="font-medium mb-2">객실 정보</h4>
+                  <ul className="space-y-2 text-gray-600">
+                    <li>최대 수용 인원: {selectedRoomDetails.maxOccupancy}명</li>
+                    <li>객실 크기: {selectedRoomDetails.size}</li>
+                    <li>침대 구성: {selectedRoomDetails.bedType}</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-medium mb-2">객실 사진</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    {selectedRoomDetails.images.map((image, index) => (
+                      <div key={index} className="aspect-video bg-gray-100 rounded-md">
+                        {/* 실제 이미지가 있다면 여기에 표시 */}
+                        <div className="w-full h-full flex items-center justify-center text-gray-400">
+                          이미지 {index + 1}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>

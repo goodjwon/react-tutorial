@@ -95,11 +95,6 @@ const Layout: FC = () => {
 
       {/* Mobile Sidebar */}
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetTrigger asChild className="md:hidden absolute top-4 left-4 z-50">
-          <Button variant="outline" size="icon">
-            <Menu className="h-5 w-5" />
-          </Button>
-        </SheetTrigger>
         <SheetContent side="left" className="p-0">
           <div className="flex flex-col h-full">
             <div className="flex items-center justify-between h-14 px-4 border-b">
@@ -145,11 +140,14 @@ const Layout: FC = () => {
       <div className="flex flex-col flex-1 overflow-hidden">
         <header className="flex items-center justify-between p-4 bg-white border-b md:py-6 md:px-8">
           <div className="flex items-center">
-            <SheetTrigger asChild className="md:hidden">
-              <Button variant="outline" size="icon">
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="md:hidden"
+              onClick={() => setOpen(true)}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
             <h1 className="ml-4 md:ml-0 text-xl font-semibold">
               {routes.find(route => route.path === location.pathname)?.name || "대시보드"}
             </h1>
