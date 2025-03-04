@@ -135,7 +135,6 @@ const RaffleManagement = () => {
   const [raffleSchedules, setRaffleSchedules] = useState<RaffleSchedule[]>([]);
   const [resorts, setResorts] = useState<Resort[]>([]);
   const [loading, setLoading] = useState(true);
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [confirmDeleteDialogOpen, setConfirmDeleteDialogOpen] = useState(false);
   const [confirmExecuteDialogOpen, setConfirmExecuteDialogOpen] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState<RaffleSchedule | null>(null);
@@ -172,7 +171,6 @@ const RaffleManagement = () => {
     };
 
     setRaffleSchedules(prev => [...prev, newSchedule]);
-    setCreateDialogOpen(false);
     setSelectedDate(null);
     setSelectedResort('');
     setSelectedRoomType('');
@@ -277,7 +275,7 @@ const RaffleManagement = () => {
       {/* 상단 헤더 및 버튼 */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">추첨 관리</h2>
-        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <Dialog>
           <DialogTrigger asChild>
             <Button>
               <Plus className="mr-2 h-4 w-4" />
@@ -371,7 +369,7 @@ const RaffleManagement = () => {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+              <Button variant="outline" onClick={() => setConfirmDeleteDialogOpen(false)}>
                 취소
               </Button>
               <Button onClick={handleCreateRaffle}>

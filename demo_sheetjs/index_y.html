@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>회원 정보 관리 시스템</title>
+  <!-- SheetJS (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+    }
+    button, input[type="file"] {
+      margin-right: 10px;
+      margin-bottom: 10px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    table {
+      border-collapse: collapse;
+      margin-top: 15px;
+      width: 100%;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px 10px;
+      text-align: center;
+      vertical-align: middle;
+    }
+    th {
+      background-color: #f0f0f0;
+      font-weight: bold;
+    }
+    .error-cell {
+      background-color: #ffdddd;
+    }
+    .readOnly {
+      background-color: #eee;
+    }
+    .server-data {
+      background-color: #e6f7ff;
+    }
+    #warning {
+      color: red;
+      margin: 15px 0;
+      font-weight: bold;
+      padding: 10px;
+      border-radius: 4px;
+      background-color: #fff8f8;
+    }
+    .status-indicator {
+      width: 12px;
+      height: 12px;
+      display: inline-block;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
+    .status-pending {
+      background-color: #ffcc00;
+    }
+    .status-success {
+      background-color: #33cc33;
+    }
+    .status-fail {
+      background-color: #ff3333;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 15px;
+      background-color: #f9f9f9;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h1>회원 정보 관리 시스템</h1>
+  
+  <div class="controls">
+    <!-- 표준 양식 다운로드 버튼 -->
+    <button id="templateBtn">양식 다운로드</button>
+    <!-- 엑셀 업로드 -->
+    <input type="file" id="excelFile" accept=".xlsx, .xls" />
+    <!-- 행 추가 버튼 -->
+    <button id="addRowBtn" disabled>행 추가</button>
+    <!-- 다운로드, 전송 버튼 (처음엔 비활성화) -->
+    <button id="downloadBtn" disabled>엑셀 다운로드</button>
+    <button id="sendBtn" disabled>API 전송</button>
+  </div>
+
+  <div id="warning"></div>
+  <div id="tableContainer"></div>
+
+  <script>
+    /************************************************
+     * 전역 변수
+     ***********************************************/
+    let globalData = [];   // 2차원 배열(엑셀 시트 내용)
+    let hasError = true;   // 유효성 검사 결과(오류 여부)
+    const tableContainer = document.getElementById("tableContainer");
+    const warningDiv = document.getElementById("warning");
+
+    // 버튼, 파일 인풋 요소 참조
+    const templateBtn = document.getElementById("templateBtn");
+    const fileInput = document.getElementById("excelFile");
+    const addRowBtn = document.getElementById("addRowBtn");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const sendBtn = document.getElementById("sendBtn");
+
+    // API 서버 URL
+    const API_URL = "http://localhost:3000/api/members";
+
+    // 이벤트 바인딩
+    templateBtn.addEventListener("click", downloadTemplate);
+    fileInput.addEventListener("change", handleFile);
+    addRowBtn.addEventListener("click", addNewRow);
+    downloadBtn.addEventListener("click", downloadExcel);
+    sendBtn.addEventListener("click", sendToApi);
+
+    /************************************************
+     * 1) 표준 엑셀 양식 다운로드
+     ***********************************************/
+    function downloadTemplate() {
+      // 회원 정보 표준 양식 (헤더 + 예시 데이터)
+      const templateData = [
+        ["NAME", "DATE_OF_BIRTH", "P.NUMBER(4)", "GENDER(1,2)", "M.ID", "M.NUMBER"], // Header
+        ["홍길동", "1990-01-01", "1234", "1", "", ""],
+        ["김철수", "1985-05-15", "5678", "2", "", ""],
+      ];
+
+      const ws = XLSX.utils.aoa_to_sheet(templateData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "회원정보");
+
+      const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+      const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "회원정보_템플릿.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    /************************************************
+     * 2) 엑셀 파일 업로드 → 2차원 배열로 로드
+     ***********************************************/
+    function handleFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const data = evt.target.result;
+        const workbook = XLSX.read(data, { type: "binary" });
+        // 첫 시트만 사용
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+
+        let sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        
+        // 열이 6개 미만이면 6열로 확장
+        const maxCols = 6;
+        globalData = sheetData.map(row => {
+          const newRow = [];
+          for (let c = 0; c < maxCols; c++) {
+            newRow[c] = row[c] !== undefined ? row[c] : "";
+          }
+          return newRow;
+        });
+
+        // 헤더가 없거나 잘못된 경우 기본 헤더 추가
+        if (globalData.length === 0 || 
+            globalData[0][0] !== "NAME" || 
+            globalData[0][1] !== "DATE_OF_BIRTH" || 
+            globalData[0][2] !== "P.NUMBER(4)" ||
+            globalData[0][3] !== "GENDER(1,2)") {
+          globalData.unshift(["NAME", "DATE_OF_BIRTH", "P.NUMBER(4)", "GENDER(1,2)", "M.ID", "M.NUMBER"]);
+        }
+
+        buildTable(globalData);
+        validateAll(); // 초기 유효성 검사
+
+        // 업로드가 완료되면 "행 추가" 버튼 활성화
+        addRowBtn.disabled = false;
+      };
+      reader.readAsBinaryString(file);
+    }
+
+    /************************************************
+     * 행 추가 기능
+     ***********************************************/
+    function addNewRow() {
+      // 새 빈 행 추가
+      const newRow = ["", "", "", "", "", ""];
+      globalData.push(newRow);
+
+      // 테이블 재생성 & 검증
+      buildTable(globalData);
+      validateAll();
+    }
+
+    /************************************************
+     * 3) 2차원 배열 → HTML 테이블 생성
+     ***********************************************/
+    function buildTable(data) {
+      tableContainer.innerHTML = "";
+      const table = document.createElement("table");
+
+      for (let r = 0; r < data.length; r++) {
+        const tr = document.createElement("tr");
+        
+        // 상태 표시 열 추가 (첫 행은 헤더)
+        if (r === 0) {
+          const statusTh = document.createElement("th");
+          statusTh.textContent = "상태";
+          tr.appendChild(statusTh);
+        } else {
+          const statusTd = document.createElement("td");
+          statusTd.innerHTML = '<span class="status-indicator"></span>';
+          tr.appendChild(statusTd);
+        }
+        
+        for (let c = 0; c < data[r].length; c++) {
+          const isHeaderRow = (r === 0);
+          const cellElem = document.createElement(isHeaderRow ? "th" : "td");
+          
+          if (isHeaderRow) {
+            // 헤더는 편집 불가
+            cellElem.textContent = data[r][c];
+          } else {
+            // M.ID(4), M.NUMBER(5) 열은 읽기전용 (서버에서 제공)
+            if (c === 4 || c === 5) {
+              cellElem.classList.add("readOnly");
+              cellElem.classList.add("server-data");
+              cellElem.textContent = data[r][c];
+            } else if (c === 3) { // GENDER 열은 드롭다운으로 처리
+              cellElem.classList.add("gender-select");
+              
+              const select = document.createElement("select");
+              select.innerHTML = `
+                <option value="">선택</option>
+                <option value="1" ${data[r][c] === "1" ? "selected" : ""}>남성(1)</option>
+                <option value="2" ${data[r][c] === "2" ? "selected" : ""}>여성(2)</option>
+              `;
+              
+              select.addEventListener("change", () => {
+                globalData[r][c] = select.value;
+                validateAll();
+              });
+              
+              cellElem.appendChild(select);
+            } else {
+              // 나머지 열은 편집 가능
+              cellElem.contentEditable = "true";
+              cellElem.textContent = data[r][c];
+
+              // 입력 중 실시간으로 값 반영 + validation
+              cellElem.addEventListener("input", () => {
+                globalData[r][c] = cellElem.textContent;
+                validateAll();
+              });
+            }
+          }
+          tr.appendChild(cellElem);
+        }
+        table.appendChild(tr);
+      }
+      tableContainer.appendChild(table);
+    }
+
+    /************************************************
+     * 4) 전체 유효성 검사
+     ***********************************************/
+    function validateAll() {
+      const table = tableContainer.querySelector("table");
+      if (!table) return;
+
+      // 에러 표시 초기화
+      for (const td of table.querySelectorAll("td")) {
+        td.classList.remove("error-cell");
+      }
+      let errorFound = false;
+
+      const rowCount = globalData.length;
+      // 첫 행(r=0)은 헤더이므로 r=1부터 검사
+
+      // NAME 열: 빈 값 아니어야 함 + 한글, 영문만 허용
+      for (let r = 1; r < rowCount; r++) {
+        const name = String(globalData[r][0]);
+        const nameTd = table.rows[r].cells[1]; // 상태 열이 추가되어 인덱스가 1씩 밀림
+        
+        if (!name.trim() || !/^[가-힣A-Za-z\s]+$/.test(name)) {
+          markError(nameTd);
+          errorFound = true;
+        }
+      }
+
+      // DATE_OF_BIRTH 열: YYYY-MM-DD 형식 검사
+      for (let r = 1; r < rowCount; r++) {
+        const dob = String(globalData[r][1]);
+        const dobTd = table.rows[r].cells[2];
+        
+        if (!dob.trim() || !/^\d{4}-\d{2}-\d{2}$/.test(dob)) {
+          markError(dobTd);
+          errorFound = true;
+        } else {
+          // 날짜 유효성 추가 검사
+          const [year, month, day] = dob.split('-').map(Number);
+          const date = new Date(year, month - 1, day);
+          if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+            markError(dobTd);
+            errorFound = true;
+          }
+        }
+      }
+
+      // P.NUMBER(4) 열: 4자리 숫자 검사
+      for (let r = 1; r < rowCount; r++) {
+        const pNumber = String(globalData[r][2]);
+        const pNumberTd = table.rows[r].cells[3];
+        
+        if (!pNumber.trim() || !/^\d{4}$/.test(pNumber)) {
+          markError(pNumberTd);
+          errorFound = true;
+        }
+      }
+
+      // GENDER 열: 1 또는 2만 허용
+      for (let r = 1; r < rowCount; r++) {
+        const gender = String(globalData[r][3]);
+        const genderTd = table.rows[r].cells[4];
+        
+        if (!gender.trim() || !["1", "2"].includes(gender)) {
+          markError(genderTd);
+          errorFound = true;
+        }
+      }
+
+      // 버튼 활성/비활성
+      hasError = errorFound;
+      downloadBtn.disabled = hasError;
+      sendBtn.disabled = hasError;
+
+      warningDiv.textContent = hasError
+        ? "※ 입력값에 오류가 있습니다. 모든 오류를 수정해야 다운로드/전송이 가능합니다."
+        : "";
+
+      function markError(td) {
+        td.classList.add("error-cell");
+      }
+    }
+
+    /************************************************
+     * 5) 엑셀 다운로드
+     ***********************************************/
+    function downloadExcel() {
+      if (hasError) {
+        alert("오류를 모두 수정해야 다운로드가 가능합니다.");
+        return;
+      }
+      
+      // 다운로드용 데이터 준비 (상태 열 없음)
+      const downloadData = [];
+      for (const row of globalData) {
+        downloadData.push([...row]);
+      }
+      
+      const ws = XLSX.utils.aoa_to_sheet(downloadData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "회원정보");
+
+      const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+      const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "회원정보_검증완료.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    /************************************************
+     * 6) API 전송 및 서버 응답 처리
+     ***********************************************/
+    async function sendToApi() {
+      if (hasError) {
+        alert("오류를 모두 수정해야 전송이 가능합니다.");
+        return;
+      }
+      
+      const table = tableContainer.querySelector("table");
+      if (!table) return;
+      
+      const rowCount = globalData.length;
+      const promises = [];
+      
+      // 전송 시작 알림
+      warningDiv.textContent = "서버에 데이터를 전송 중입니다...";
+      warningDiv.style.color = "blue";
+      
+      // 첫 행은 헤더, r=1부터
+      for (let r = 1; r < rowCount; r++) {
+        const row = globalData[r];
+        const name = row[0];
+        const dob = row[1];
+        const pNumber = row[2];
+        const gender = row[3];
+        
+        // 행 상태 표시를 대기 중으로 변경
+        const statusIndicator = table.rows[r].cells[0].querySelector('.status-indicator');
+        statusIndicator.className = 'status-indicator status-pending';
+        
+        const payload = {
+          name,
+          dateOfBirth: dob,
+          pNumber,
+          gender
+        };
+        
+        // 각 행에 대한 API 요청을 promises 배열에 추가
+        const promise = (async () => {
+          try {
+            const response = await fetch(API_URL, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            });
+            
+            if (!response.ok) {
+              console.error("Row", r, "전송 실패", response.status);
+              statusIndicator.className = 'status-indicator status-fail';
+              return;
+            }
+            
+            // 서버 응답 처리 - M.ID와 M.NUMBER 매핑
+            const result = await response.json();
+            console.log("Server response:", result);
+            
+            if (result && result.success && result.list && result.list.length > 0) {
+              const memberData = result.list[0];
+              
+              // 서버에서 반환된 값으로 데이터 업데이트
+              globalData[r][4] = memberData.memId;
+              globalData[r][5] = memberData.memSeq.toString();
+              
+              // 테이블 셀 업데이트
+              table.rows[r].cells[5].textContent = memberData.memId;
+              table.rows[r].cells[6].textContent = memberData.memSeq.toString();
+              
+              // 상태 표시를 성공으로 변경
+              statusIndicator.className = 'status-indicator status-success';
+              console.log("Row", r, "전송 및 매핑 성공");
+            } else {
+              statusIndicator.className = 'status-indicator status-fail';
+              console.error("Row", r, "서버 응답에 필요한 데이터가 없습니다.", result);
+            }
+          } catch (err) {
+            console.error("Row", r, "전송 에러", err);
+            statusIndicator.className = 'status-indicator status-fail';
+          }
+        })();
+        
+        promises.push(promise);
+      }
+      
+      // 모든 요청이 완료될 때까지 대기
+      try {
+        await Promise.all(promises);
+        warningDiv.textContent = "모든 데이터 전송 및 매핑이 완료되었습니다.";
+        warningDiv.style.color = "green";
+      } catch (error) {
+        console.error("일부 요청이 실패했습니다:", error);
+        warningDiv.textContent = "일부 데이터 전송에 실패했습니다. 상태를 확인하세요.";
+        warningDiv.style.color = "red";
+      }
+    }
+  </script>
+</body>
+</html>

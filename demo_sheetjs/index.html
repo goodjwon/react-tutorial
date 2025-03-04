@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>SheetJS Excel Validation & API Example (Add Row)</title>
+  <!-- SheetJS (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 20px;
+    }
+    button, input[type="file"] {
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    table {
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 5px 10px;
+      min-width: 100px;
+      text-align: center;
+      vertical-align: middle;
+    }
+    .error-cell {
+      background-color: #ffdddd; /* 에러 셀 배경색 */
+    }
+    .readOnly {
+      background-color: #eee; /* 읽기전용 컬럼(E 등) 표시 */
+    }
+    #warning {
+      color: red;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>엑셀 업로드 &middot; 행 추가 &middot; 편집 &middot; 검증 &middot; 다운로드 &middot; API 전송</h1>
+  <!-- 표준 양식 다운로드 버튼 (이전 예제와 동일) -->
+  <button id="templateBtn">양식 다운로드</button>
+  <!-- 엑셀 업로드 -->
+  <input type="file" id="excelFile" accept=".xlsx, .xls" />
+  <!-- 행 추가 버튼 -->
+  <button id="addRowBtn" disabled>행 추가</button>
+  <!-- 다운로드, 전송 버튼 (처음엔 비활성화) -->
+  <button id="downloadBtn" disabled>엑셀 다운로드</button>
+  <button id="sendBtn" disabled>API 전송</button>
+
+  <div id="warning"></div>
+  <div id="tableContainer"></div>
+
+  <script>
+    /************************************************
+     * 전역 변수
+     ***********************************************/
+    let globalData = [];   // 2차원 배열(엑셀 시트 내용)
+    let hasError = true;   // 유효성 검사 결과(오류 여부)
+    const tableContainer = document.getElementById("tableContainer");
+    const warningDiv = document.getElementById("warning");
+
+    // 버튼, 파일 인풋 요소 참조
+    const templateBtn = document.getElementById("templateBtn");
+    const fileInput = document.getElementById("excelFile");
+    const addRowBtn = document.getElementById("addRowBtn");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const sendBtn = document.getElementById("sendBtn");
+
+    // 이벤트 바인딩
+    templateBtn.addEventListener("click", downloadTemplate);
+    fileInput.addEventListener("change", handleFile);
+    addRowBtn.addEventListener("click", addNewRow);
+    downloadBtn.addEventListener("click", downloadExcel);
+    sendBtn.addEventListener("click", sendToApi);
+
+    /************************************************
+     * 1) 표준 엑셀 양식 다운로드 (이전 예시와 동일)
+     ***********************************************/
+    function downloadTemplate() {
+      // 간단한 표준 양식 (헤더 1줄 + 빈 행 예시)
+      const templateData = [
+        ["Seq", "Item", "Qty", "Price", "Total"], // Header
+        ["1", "샘플항목", "10", "1000", ""],
+        ["2", "샘플항목2", "5", "2000", ""],
+      ];
+
+      const ws = XLSX.utils.aoa_to_sheet(templateData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+      const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+      const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "template.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    /************************************************
+     * 2) 엑셀 파일 업로드 → 2차원 배열로 로드
+     ***********************************************/
+    function handleFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const data = evt.target.result;
+        const workbook = XLSX.read(data, { type: "binary" });
+        // 첫 시트만 사용 (예시)
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+
+        let sheetData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+        // 최대 5열(A,B,C,D,E)만
+        const maxCols = 5;
+        globalData = sheetData.map(row => {
+          const newRow = [];
+          for (let c = 0; c < maxCols; c++) {
+            newRow[c] = row[c] !== undefined ? row[c] : "";
+          }
+          return newRow;
+        });
+
+        buildTable(globalData);
+        validateAll(); // 초기 유효성 검사
+
+        // 업로드가 완료되면 "행 추가" 버튼 활성화
+        addRowBtn.disabled = false;
+      };
+      reader.readAsBinaryString(file);
+    }
+
+    /************************************************
+     * 행 추가 기능
+     ***********************************************/
+    function addNewRow() {
+      // 0번 행은 헤더이므로, 마지막 행의 Seq를 참조하여 +1
+      // (만약 숫자 파싱이 안 되면 빈 칸)
+      const rowCount = globalData.length;
+
+      // 새 행을 만들기 전, 마지막 행의 A열(Seq) 확인
+      let newSeq = "";
+      if (rowCount > 1) {
+        const lastSeqStr = String(globalData[rowCount - 1][0]);
+        const lastSeqNum = parseInt(lastSeqStr, 10);
+        if (!isNaN(lastSeqNum)) {
+          newSeq = (lastSeqNum + 1).toString();
+        }
+      }
+
+      // 예: [새 Seq, "", "", "", ""]
+      const newRow = [newSeq, "", "", "", ""];
+      globalData.push(newRow);
+
+      // 테이블 재생성 & 검증
+      buildTable(globalData);
+      validateAll();
+    }
+
+    /************************************************
+     * 3) 2차원 배열 → HTML 테이블 생성
+     ***********************************************/
+    function buildTable(data) {
+      tableContainer.innerHTML = "";
+      const table = document.createElement("table");
+
+      for (let r = 0; r < data.length; r++) {
+        const tr = document.createElement("tr");
+        for (let c = 0; c < data[r].length; c++) {
+          const isHeaderRow = (r === 0);
+          const cellElem = document.createElement(isHeaderRow ? "th" : "td");
+          
+          if (isHeaderRow) {
+            // 헤더는 편집 불가
+            cellElem.textContent = data[r][c];
+          } else {
+            // E열(인덱스4)은 읽기전용 (합계)
+            if (c === 4) {
+              cellElem.classList.add("readOnly");
+              cellElem.textContent = data[r][c];
+            } else {
+              // 편집 가능
+              cellElem.contentEditable = "true";
+              cellElem.textContent = data[r][c];
+
+              // ① 입력 중 실시간으로 값 반영 + validation
+              cellElem.addEventListener("input", () => {
+                globalData[r][c] = cellElem.textContent;
+                validateAll();
+              });
+
+              // ② 편집 종료(blur) 시 Price 컬럼(D열)에 콤마 포맷
+              if (c === 3) {
+                cellElem.addEventListener("blur", () => {
+                  if (!cellElem.classList.contains("error-cell")) {
+                    const rawStr = globalData[r][3];
+                    const val = parseFloat(rawStr.replace(/,/g, ""));
+                    if (!isNaN(val)) {
+                      const formatted = numberWithCommas(val.toFixed(2));
+                      cellElem.textContent = formatted;
+                      globalData[r][3] = formatted;
+                    }
+                  }
+                });
+              }
+            }
+          }
+          tr.appendChild(cellElem);
+        }
+        table.appendChild(tr);
+      }
+      tableContainer.appendChild(table);
+    }
+
+    // 천단위 콤마 함수
+    function numberWithCommas(numStr) {
+      const val = parseFloat(numStr);
+      if (isNaN(val)) return numStr;
+      return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    /************************************************
+     * 4) 전체 유효성 검사
+     ***********************************************/
+    function validateAll() {
+      const table = tableContainer.querySelector("table");
+      if (!table) return;
+
+      // 에러 표시 초기화
+      for (const td of table.querySelectorAll("td")) {
+        td.classList.remove("error-cell");
+      }
+      let errorFound = false;
+
+      const rowCount = globalData.length;
+      // 첫 행(r=0)은 헤더이므로 r=1부터 검사
+
+      // A열(Seq): 숫자 + 순서(이전+1)
+      let Avalues = [];
+      for (let r = 1; r < rowCount; r++) {
+        const A_str = String(globalData[r][0]);
+        const A_td = table.rows[r].cells[0];
+        if (!/^\d+$/.test(A_str)) {
+          markError(A_td);
+          errorFound = true;
+        }
+        Avalues[r] = parseInt(A_str, 10);
+      }
+      // 순차 증가
+      for (let r = 2; r < rowCount; r++) {
+        if (!isNaN(Avalues[r]) && !isNaN(Avalues[r - 1])) {
+          if (Avalues[r] !== Avalues[r - 1] + 1) {
+            markError(table.rows[r].cells[0]);
+            errorFound = true;
+          }
+        }
+      }
+
+      // B열: 한글, 영문, 숫자만 허용
+      for (let r = 1; r < rowCount; r++) {
+        const B_str = String(globalData[r][1]);
+        const B_td = table.rows[r].cells[1];
+        if (!/^[ㄱ-ㅎ가-힣A-Za-z0-9]+$/.test(B_str)) {
+          markError(B_td);
+          errorFound = true;
+        }
+      }
+
+      // C열: 최대 10자리 정수
+      for (let r = 1; r < rowCount; r++) {
+        const C_str = String(globalData[r][2]).replace(/,/g, "");
+        const C_td = table.rows[r].cells[2];
+        if (!/^\d{1,10}$/.test(C_str)) {
+          markError(C_td);
+          errorFound = true;
+        }
+      }
+
+      // D열: 금액(최대 13자리 + 소수점2)
+      for (let r = 1; r < rowCount; r++) {
+        const rawD = String(globalData[r][3]).replace(/,/g, "");
+        const D_td = table.rows[r].cells[3];
+        if (!/^\d{1,13}(\.\d{1,2})?$/.test(rawD)) {
+          markError(D_td);
+          errorFound = true;
+        }
+      }
+
+      // E열: C*D
+      for (let r = 1; r < rowCount; r++) {
+        const E_td = table.rows[r].cells[4];
+        const C_val = parseFloat(String(globalData[r][2]).replace(/,/g, ""));
+        const D_val = parseFloat(String(globalData[r][3]).replace(/,/g, ""));
+        if (!isNaN(C_val) && !isNaN(D_val)) {
+          const product = C_val * D_val;
+          const formatted = numberWithCommas(product.toFixed(2));
+          globalData[r][4] = formatted; 
+          E_td.textContent = formatted;
+        } else {
+          globalData[r][4] = "";
+          E_td.textContent = "";
+        }
+      }
+
+      // 버튼 활성/비활성
+      hasError = errorFound;
+      downloadBtn.disabled = hasError;
+      sendBtn.disabled = hasError;
+
+      warningDiv.textContent = hasError
+        ? "※ 입력값에 오류가 있습니다. 모든 오류를 수정해야 다운로드/전송이 가능합니다."
+        : "";
+
+      function markError(td) {
+        td.classList.add("error-cell");
+      }
+    }
+
+    /************************************************
+     * 5) 엑셀 다운로드
+     ***********************************************/
+    function downloadExcel() {
+      if (hasError) {
+        alert("오류를 모두 수정해야 다운로드가 가능합니다.");
+        return;
+      }
+      const ws = XLSX.utils.aoa_to_sheet(globalData);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+
+      const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+      const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "validated_data.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    /************************************************
+     * 6) API 전송
+     ***********************************************/
+    async function sendToApi() {
+      if (hasError) {
+        alert("오류를 모두 수정해야 전송이 가능합니다.");
+        return;
+      }
+      const rowCount = globalData.length;
+      // 첫 행은 헤더, r=1부터
+      for (let r = 1; r < rowCount; r++) {
+        const row = globalData[r];
+        const seq = row[0];
+        const item = row[1];
+        const qty = row[2].toString().replace(/,/g, "");
+        const price = row[3].toString().replace(/,/g, "");
+        const total = row[4].toString().replace(/,/g, "");
+
+        const payload = {
+          seq,
+          item,
+          qty: parseInt(qty, 10),
+          price: parseFloat(price),
+          total: parseFloat(total),
+        };
+
+        try {
+          // 실제 API 주소로 교체
+          const response = await fetch("https://example.com/api/endpoint", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (!response.ok) {
+            console.error("Row", r, "전송 실패", response.status);
+          } else {
+            console.log("Row", r, "전송 성공");
+          }
+        } catch (err) {
+          console.error("Row", r, "전송 에러", err);
+        }
+      }
+      alert("모든 행 전송 시도를 완료했습니다. 콘솔을 확인하세요.");
+    }
+  </script>
+</body>
+</html>
