@@ -146,7 +146,7 @@ const getReservations = (): Reservation[] => [
   {
     id: 5,
     reservationNumber: "RES12349",
-    name: "최민수",
+    name: "최민수2",
     phoneNumber: "010-5678-9012",
     email: "choi@example.com",
     checkIn: "2024-08-20",

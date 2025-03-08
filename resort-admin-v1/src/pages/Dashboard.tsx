@@ -68,7 +68,7 @@ const getRecentReservations = (): RecentReservation[] => [
   { id: "RES12761", name: "김철수", resort: "RESORT1", checkIn: "2024-08-01", status: "CONFIRMED" },
   { id: "RES12760", name: "이영희", resort: "RESORT2", checkIn: "2024-08-02", status: "CONFIRMED" },
   { id: "RES12759", name: "박지성", resort: "RESORT3", checkIn: "2024-08-01", status: "PENDING" },
-  { id: "RES12758", name: "최민수", resort: "RESORT1", checkIn: "2024-08-03", status: "CONFIRMED" },
+  { id: "RES12758", name: "최민수2", resort: "RESORT1", checkIn: "2024-08-03", status: "CONFIRMED" },
   { id: "RES12757", name: "정다운", resort: "RESORT2", checkIn: "2024-08-05", status: "CANCELLED" }
 ];
 
