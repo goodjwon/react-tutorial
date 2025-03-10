@@ -585,7 +585,7 @@ const RaffleManagement = () => {
             <Button variant="outline" onClick={() => setConfirmDeleteDialogOpen(false)}>
               취소
             </Button>
-            <Button variant="destructive" onClick={handleDeleteRaffle}>
+            <Button variant="outline" onClick={handleDeleteRaffle}>
               삭제 확인
             </Button>
           </DialogFooter>
@@ -616,7 +616,7 @@ const RaffleManagement = () => {
             <Button variant="outline" onClick={() => setConfirmExecuteDialogOpen(false)}>
               취소
             </Button>
-            <Button onClick={handleExecuteRaffle}>
+            <Button  variant="outline" onClick={handleExecuteRaffle}>
               추첨 실행 확인
             </Button>
           </DialogFooter>
@@ -815,12 +815,13 @@ const DrawingScheduleDialog = ({ open, onOpenChange, onScheduleCreate }: {
             <Button 
               variant="outline" 
               onClick={() => onOpenChange(false)}
-              className="border-gray-200 hover:bg-gray-100 text-gray-900"
             >
               <Trash className="mr-2 h-4 w-4" />
               취소
             </Button>
-            <Button type="submit">
+            <Button 
+              variant="outline"
+              type="submit">
               추첨 일정 생성
             </Button>
           </DialogFooter>
