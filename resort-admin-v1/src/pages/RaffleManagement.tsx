@@ -812,7 +812,12 @@ const DrawingScheduleDialog = ({ open, onOpenChange, onScheduleCreate }: {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              className="border-gray-200 hover:bg-gray-100 text-gray-900"
+            >
+              <Trash className="mr-2 h-4 w-4" />
               취소
             </Button>
             <Button type="submit">

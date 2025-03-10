@@ -420,7 +420,7 @@ const ReservationDetail = () => {
                 <Edit className="mr-2 h-4 w-4" />
                 수정
               </Button>
-              <Button variant="destructive" onClick={() => setCancelDialogOpen(true)}>
+              <Button variant="outline" onClick={() => setCancelDialogOpen(true)}>
                 <Trash className="mr-2 h-4 w-4" />
                 취소
               </Button>
@@ -585,7 +585,7 @@ const ReservationDetail = () => {
               <Separator />
 
               <div className="space-y-2">
-                <Button className="w-full" variant="default" onClick={() => setMessageDialogOpen(true)}>
+                <Button className="w-full" variant="outline" onClick={() => setMessageDialogOpen(true)}>
                   <Send className="mr-2 h-4 w-4" />
                   메시지 발송
                 </Button>
@@ -595,7 +595,7 @@ const ReservationDetail = () => {
                       <Edit className="mr-2 h-4 w-4" />
                       예약 수정
                     </Button>
-                    <Button className="w-full" variant="destructive" onClick={() => setCancelDialogOpen(true)}>
+                    <Button className="w-full" variant="outline" onClick={() => setCancelDialogOpen(true)}>
                       <Trash className="mr-2 h-4 w-4" />
                       예약 취소
                     </Button>
@@ -628,7 +628,7 @@ const ReservationDetail = () => {
             <Button variant="outline" onClick={() => setCancelDialogOpen(false)}>
               취소
             </Button>
-            <Button variant="destructive" onClick={handleCancelReservation}>
+            <Button variant="outline" onClick={handleCancelReservation}>
               예약 취소 확인
             </Button>
           </DialogFooter>
