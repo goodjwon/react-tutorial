@@ -56,7 +56,7 @@ const Layout: FC = () => {
     <div className="flex h-screen bg-gray-100">
       {/* Desktop Sidebar */}
       <div className="hidden md:flex md:w-64 md:flex-col">
-        <div className="flex flex-col flex-grow pt-5 bg-white overflow-y-auto border-r">
+        <div className="flex flex-col flex-grow bg-white overflow-y-auto border-r">
           <div className="flex items-center justify-center h-14 border-b">
             <h1 className="text-xl font-bold">리조트 관리 시스템</h1>
           </div>

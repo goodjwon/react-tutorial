@@ -153,6 +153,10 @@
     @apply bg-white hover:bg-gray-100 !important;
   }
 
+  header {
+    @apply h-14 px-6 !important;
+  }
+
   .dark .popover-content,
   .dark .select-content,
   .dark .dropdown-content,

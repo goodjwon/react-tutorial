@@ -45,6 +45,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
 
 interface Reservation {
   id: number;
@@ -72,6 +81,143 @@ interface Reservation {
     description: string;
   }>;
 }
+
+interface DrawingSchedule {
+  isRecurring: boolean;
+  selectedDays: string[];
+  daysBeforeDrawing: number;
+  resortCode: string;
+  roomType: string;
+  active: boolean;
+}
+
+interface DrawingScheduleDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onScheduleCreate: (schedule: DrawingSchedule) => void;
+}
+
+const DAYS_OF_WEEK = [
+  { value: '0', label: '일요일' },
+  { value: '1', label: '월요일' },
+  { value: '2', label: '화요일' },
+  { value: '3', label: '수요일' },
+  { value: '4', label: '목요일' },
+  { value: '5', label: '금요일' },
+  { value: '6', label: '토요일' },
+];
+
+const DrawingScheduleDialog = ({ open, onOpenChange, onScheduleCreate }: DrawingScheduleDialogProps) => {
+  const [isRecurring, setIsRecurring] = useState(true);
+  const [selectedDays, setSelectedDays] = useState<string[]>([]);
+  const [daysBeforeDrawing] = useState(13);
+  const [selectedResort, setSelectedResort] = useState('');
+  const [selectedRoomType, setSelectedRoomType] = useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onScheduleCreate({
+      isRecurring,
+      selectedDays,
+      daysBeforeDrawing,
+      resortCode: selectedResort,
+      roomType: selectedRoomType,
+      active: true
+    });
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>추첨 일정 생성</DialogTitle>
+          <DialogDescription>
+            추첨 일정을 설정합니다. 주기적 추첨을 설정하면 매주 지정된 요일에 자동으로 추첨이 진행됩니다.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="recurring">주기적 추첨 설정</Label>
+              <Switch
+                id="recurring"
+                checked={isRecurring}
+                onCheckedChange={setIsRecurring}
+              />
+            </div>
+
+            {isRecurring && (
+              <div className="space-y-4">
+                <Label>추첨 요일 선택</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  {DAYS_OF_WEEK.map((day) => (
+                    <div key={day.value} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`day-${day.value}`}
+                        checked={selectedDays.includes(day.value)}
+                        onCheckedChange={(checked: boolean) => {
+                          if (checked) {
+                            setSelectedDays([...selectedDays, day.value]);
+                          } else {
+                            setSelectedDays(selectedDays.filter(d => d !== day.value));
+                          }
+                        }}
+                      />
+                      <Label htmlFor={`day-${day.value}`}>{day.label}</Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label>추첨일 설정</Label>
+              <p className="text-sm text-gray-500">추첨일 13일 전에 자동으로 설정됩니다.</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="resort">리조트</Label>
+              <Select value={selectedResort} onValueChange={setSelectedResort}>
+                <SelectTrigger id="resort">
+                  <SelectValue placeholder="리조트 선택" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="resort-a">리조트 A (제주도)</SelectItem>
+                  <SelectItem value="resort-b">리조트 B (강원도)</SelectItem>
+                  <SelectItem value="resort-c">리조트 C (부산)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="roomType">객실 유형</Label>
+              <Select value={selectedRoomType} onValueChange={setSelectedRoomType}>
+                <SelectTrigger id="roomType">
+                  <SelectValue placeholder="객실 유형 선택" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="STANDARD">스탠다드</SelectItem>
+                  <SelectItem value="DELUXE">디럭스</SelectItem>
+                  <SelectItem value="SUITE">스위트</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              취소
+            </Button>
+            <Button type="submit">
+              추첨 일정 생성
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 // 가상 데이터 (API 응답 시뮬레이션)
 const getReservationDetails = (id: string): Reservation => ({
