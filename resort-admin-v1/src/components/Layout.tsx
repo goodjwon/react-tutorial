@@ -9,7 +9,8 @@ import {
   Settings as SettingsIcon,
   Menu,
   X,
-  User
+  User,
+  BarChart
 } from 'lucide-react';
 import { 
   Sheet, 
@@ -44,6 +45,11 @@ const Layout: FC = () => {
       name: "추첨 관리",
       path: "/raffle",
       icon: <Ticket className="h-5 w-5" />
+    },
+    {
+      name: "사용 통계",
+      path: "/statistics",
+      icon: <BarChart className="h-5 w-5" />
     },
     {
       name: "설정",
