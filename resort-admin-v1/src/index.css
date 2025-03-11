@@ -166,4 +166,32 @@
   .dark [role="option"] {
     @apply bg-zinc-950 border-zinc-800 hover:bg-zinc-900;
   }
+
+  /* 버튼 스타일 개선 */
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90;
+  }
+
+  /* 선택된 버튼 스타일 */
+  [data-state="active"] {
+    @apply bg-primary text-primary-foreground font-semibold;
+  }
+
+  /* 아웃라인 버튼 스타일 */
+  [data-variant="outline"] {
+    @apply border-input bg-background hover:bg-accent hover:text-accent-foreground;
+  }
+
+  /* 선택기 스타일 */
+  .select-content,
+  .popover-content,
+  .dropdown-content {
+    @apply bg-background border shadow-md rounded-lg z-50;
+    @apply backdrop-blur-sm bg-opacity-100;
+  }
+
+  /* 선택된 아이템 스타일 */
+  [data-state="checked"] {
+    @apply bg-primary/20 text-primary font-medium;
+  }
 }
